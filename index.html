@@ -6,7 +6,6 @@
 <title>Vocalis</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#F1F4F2">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: banco di lavoro a due colonne — strumento (tracciato del pitch) a sinistra, comandi ed esito a destra; una colonna su telefono */
@@ -32,7 +31,6 @@
   --good-soft: #17352A; --warn-soft: #3A2D16; --bad-soft: #3D1F1A; color-scheme: dark }
 
 * { box-sizing: border-box }
-[hidden] { display: none !important }
 html, body { background: var(--bg); color: var(--ink) }
 body { font: 16px/1.5 var(--f-body); margin: 0 }
 .wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 48px }
@@ -163,6 +161,28 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
 </style>
+<style>
+[hidden] { display: none !important }
+.hzbig { font-family: var(--f-display); font-weight: 700; font-size: 2.6rem; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums }
+.hzbig small { font-size: 1rem; color: var(--muted); font-weight: 500; margin-left: 4px }
+.hzbig.off { color: var(--line) }
+.stab { flex: 1; min-width: 170px; display: grid; gap: 4px }
+.stab .track { position: relative; height: 10px; border-radius: 5px; background: var(--sunk); overflow: hidden }
+.stab .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 5px; background: var(--good); transition: width .12s linear, background .2s }
+.phase { display: inline-flex; gap: 6px; margin-top: 10px }
+.phase span { padding: 3px 10px; border-radius: 999px; background: var(--sunk); color: var(--muted); font-weight: 700; font-size: .82rem }
+.phase span.on { background: var(--accent); color: var(--accent-ink) }
+.phase span.done { background: var(--good-soft); color: var(--good) }
+.readtext { margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 1.05rem; line-height: 1.55 }
+.habit { display: grid; gap: 2px }
+.habit b { font-family: var(--f-mono); font-size: 1.05rem }
+.filecard { display: grid; gap: 8px; align-content: start }
+.filecard .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.filecard select { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px }
+.onsets { display: flex; gap: 6px; flex-wrap: wrap }
+.onsets span { font-family: var(--f-mono); font-size: .8rem; padding: 4px 8px; border-radius: 8px; background: var(--sunk) }
+.onsets span.good { background: var(--good-soft); color: var(--good) } .onsets span.warn { background: var(--warn-soft); color: var(--warn) }
+</style>
 
 </head>
 <body>
@@ -170,7 +190,7 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
   <header class="top">
     <div class="brand">
       <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="var(--accent)"/><path d="M6 22c3 0 3-8 6-8s3 14 6 14 3-18 6-18 3 14 6 14 3-6 4-6" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round"/></svg>
-      <div><h1>Vocalis</h1><p>Esercizi di vocalizzo con analisi acustica in tempo reale</p></div>
+      <div><h1>Vocalis</h1><p>Esercizi di logopedia con analisi acustica della voce</p></div>
     </div>
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="esercizi" aria-selected="true">Esercizi</button>
@@ -183,54 +203,46 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
   <div class="notice" id="micNotice" hidden></div>
 
   <main>
-    <!-- ESERCIZI: elenco -->
     <section class="view" id="v-esercizi">
       <div class="settings">
         <div class="field"><label class="label" for="sProfile">Voce</label>
           <select id="sProfile"><option value="m">Maschile</option><option value="f">Femminile</option></select></div>
-        <div class="field"><label class="label" for="sLow">Nota grave</label><select id="sLow"></select></div>
-        <div class="field"><label class="label" for="sHigh">Nota acuta</label><select id="sHigh"></select></div>
-        <div class="field"><label class="label" for="sTarget">Nota target</label><select id="sTarget"></select></div>
-        <p class="muted" style="margin:0;font-size:.84rem;max-width:36ch">Tieni il telefono o il microfono a circa 30 cm dalla bocca, in una stanza silenziosa.</p>
+        <div class="habit"><span class="label">Altezza abituale</span><b id="habit">—</b></div>
+        <p class="muted" style="margin:0;font-size:.84rem;max-width:44ch">Tieni il telefono a circa 30 cm dalla bocca, sempre alla stessa distanza, in una stanza silenziosa. Così i valori sono confrontabili da un giorno all'altro.</p>
       </div>
 
-      <div class="exgroup">
-        <div class="label">Vocali sostenute</div>
-        <div class="exgrid" id="gridVowels"></div>
-      </div>
-      <div class="exgroup">
-        <div class="label">Intonazione e agilità</div>
-        <div class="exgrid" id="gridMoves"></div>
-      </div>
-      <div class="exgroup">
-        <div class="label">Da una registrazione</div>
+      <div class="exgroup"><div class="label">Vocali sostenute · alla tua altezza naturale</div><div class="exgrid" id="gVowels"></div></div>
+      <div class="exgroup"><div class="label">Valutazione</div><div class="exgrid" id="gEval"></div></div>
+      <div class="exgroup"><div class="label">Esercizi di terapia vocale</div><div class="exgrid" id="gTherapy"></div></div>
+      <div class="exgroup"><div class="label">Da una registrazione</div>
         <div class="exgrid">
-          <label class="excard" for="fileIn" style="cursor:pointer">
+          <div class="excard filecard">
             <span class="glyph"><svg viewBox="0 0 56 28"><path d="M4 14h6l3-8 4 16 4-12 3 8 3-4h25" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <h3>Analizza un file audio</h3>
-            <small>Carica una vocale sostenuta registrata (WAV, MP3, M4A) e ricevi lo stesso referto.</small>
-          </label>
-          <input type="file" id="fileIn" accept="audio/*" hidden>
+            <small>WAV, MP3 o M4A registrato con il telefono.</small>
+            <div class="row"><select id="fileKind" aria-label="Tipo di registrazione"><option value="vA">Vocale sostenuta</option><option value="speech">Parlato</option></select>
+              <label class="btn" for="fileIn" style="cursor:pointer">Scegli file</label></div>
+            <input type="file" id="fileIn" accept="audio/*" hidden>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- SESSIONE (esercizio guidato o ascolto libero) -->
     <section class="view" id="v-sessione" hidden>
       <button class="back" id="btnBack">← Tutti gli esercizi</button>
       <div class="session">
         <div class="panel stage">
           <div class="readout">
-            <div><div class="note off" id="rNote">—</div><div class="hz" id="rHz">— Hz</div></div>
-            <div class="cents">
-              <div class="label" id="rCentsLabel">Intonazione</div>
-              <div class="bar"><div class="needle" id="rNeedle"></div></div>
-              <div class="scale"><span>−50</span><span>0 cent</span><span>+50</span></div>
+            <div><div class="hzbig off" id="rHz">—<small>Hz</small></div><div class="hz" id="rNote">&nbsp;</div></div>
+            <div class="stab">
+              <div class="label" id="rStabLabel">Stabilità del tono</div>
+              <div class="track"><div class="fill" id="rStab"></div></div>
+              <div class="scale" style="display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)"><span>instabile</span><span>stabile</span></div>
             </div>
           </div>
           <div class="chips" id="liveChips"><span class="chip">In attesa del microfono</span></div>
           <div class="plotbox"><canvas class="plot" id="plot"></canvas><div class="overlay" id="countdown" hidden></div></div>
-          <div class="legend"><span><i style="background:var(--good)"></i>armonica (HNR ≥ 20 dB)</span><span><i style="background:var(--warn)"></i>rumore moderato</span><span><i style="background:var(--bad)"></i>rumorosa / irregolare</span><span id="legTarget"><i style="background:var(--accent)"></i>traccia guida</span></div>
+          <div class="legend" id="legend"></div>
           <div class="meter">
             <div class="label">Intensità (dBFS)</div>
             <div class="track"><div class="zone" style="left:20%;right:10%"></div><div class="fill" id="rMeter"></div></div>
@@ -238,7 +250,6 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
           </div>
           <div class="metrics" id="liveMetrics"></div>
         </div>
-
         <div class="side">
           <div class="panel" id="exInfo"></div>
           <div class="panel result" id="exResult" hidden></div>
@@ -246,14 +257,12 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
       </div>
     </section>
 
-    <!-- PROGRESSI -->
     <section class="view prog" id="v-progressi" hidden>
       <div class="head">
-        <div><h2>Andamento</h2><p class="muted" style="margin:2px 0 0">Ogni esercizio completato viene salvato su questo dispositivo.</p></div>
+        <div><h2>Andamento</h2><p class="muted" style="margin:2px 0 0">Ogni esercizio completato viene salvato su questo telefono.</p></div>
         <div class="settings" style="margin:0">
           <div class="field"><label class="label" for="pEx">Esercizio</label><select id="pEx"></select></div>
-          <div class="field"><label class="label" for="pMetric">Valore</label>
-            <select id="pMetric"><option value="score">Punteggio</option><option value="hnr">HNR (dB)</option><option value="cpp">CPP (dB)</option><option value="jitter">Jitter (%)</option><option value="shimmer">Shimmer (%)</option><option value="mpt">Tempo di fonazione (s)</option><option value="rangeSt">Estensione (semitoni)</option></select></div>
+          <div class="field"><label class="label" for="pMetric">Valore</label><select id="pMetric"></select></div>
         </div>
       </div>
       <div class="panel"><canvas class="trend" id="trend"></canvas></div>
@@ -270,10 +279,9 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
       </div>
     </section>
 
-    <!-- GUIDA -->
     <section class="view" id="v-guida" hidden>
       <div class="guide" id="guide"></div>
-      <p class="disclaimer">Vocalis misura parametri acustici con algoritmi standard, ma il microfono di un telefono, la stanza e la distanza influenzano i valori. Usa i numeri per confrontarti con te stesso nel tempo, sempre nelle stesse condizioni. Non sostituisce la valutazione del logopedista o del foniatra: se la raucedine dura più di 2–3 settimane, fatti visitare.</p>
+      <p class="disclaimer">Vocalis misura parametri acustici con algoritmi standard, ma il microfono del telefono, la stanza e la distanza influenzano i valori. Usa i numeri per confrontarti con te stesso nel tempo, sempre nelle stesse condizioni. Non sostituisce la valutazione del logopedista o del foniatra: porta pure i grafici dei progressi alle visite.</p>
     </section>
   </main>
 </div>
@@ -486,7 +494,7 @@ const DSP = (() => {
     jitter: { ok: 1.04, bad: 2.2 },
     shimmer: { ok: 3.81, bad: 7.5 },
     hnr: { ok: 20, bad: 12 },
-    cpp: { ok: 27, bad: 21, good100: 34, bad0: 18 }, // tarato su voci sintetiche con questo algoritmo
+    cpp: { ok: 22, bad: 17, good100: 30, bad0: 15 }, // tarato su voci sintetiche con questo algoritmo
     sdCents: { ok: 20, bad: 50 }
   };
 
@@ -504,8 +512,7 @@ const DSP = (() => {
       add(lin(m.shimmer, 2, 9), 0.15);
       add(lin(m.sdCents, 8, 60), 0.2);
     } else {
-      add(lin(m.smooth, 0.9, 0.4), 0.25);
-      add(lin(m.rangeSt, 12, 3), 0.15);
+      add(lin(m.smooth, 0.9, 0.4), 0.4);
     }
     add(lin(m.hnr, 24, 8), 0.2);
     add(lin(m.cpp, REF.cpp.good100, REF.cpp.bad0), 0.3);
@@ -541,6 +548,275 @@ if (typeof module !== 'undefined') module.exports = DSP;
 
 </script>
 <script>
+// Analisi delle registrazioni per esercizio — usa DSP, nessuna dipendenza dal DOM.
+const AN = (() => {
+  const D = (typeof DSP !== 'undefined') ? DSP : require('./dsp.js');
+  const lin = D.lin, REF = D.REF;
+  const median = a => { const b = a.filter(v => v != null && isFinite(v)).sort((p, q) => p - q); return b.length ? b[Math.floor(b.length / 2)] : null };
+  const pct = (a, p) => { const b = a.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); return b.length ? b[Math.min(b.length - 1, Math.floor(b.length * p))] : null };
+  const mean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : null;
+
+  function decimate2(x) { const y = new Float32Array(x.length >> 1); for (let i = 0; i < y.length; i++) y[i] = 0.5 * (x[2 * i] + x[2 * i + 1]); return y }
+
+  // Analisi di un frame (~64 ms)
+  function frame(x, sr, heavy) {
+    const n = x.length, last = x.subarray(n - Math.min(n, Math.round(sr * 0.043)));
+    const db = D.rmsDb(last);
+    const f = { db, voiced: false, f0: 0 };
+    if (db < -62) return f;
+    const ds = sr >= 32000 ? 2 : 1;
+    const p = D.yin(ds === 2 ? decimate2(x) : x, sr / ds, 60, 1000, 0.15);
+    if (!p.f0 || p.clarity < 0.72) return f;
+    f.voiced = true; f.f0 = p.f0; f.midi = D.hzToMidi(p.f0); f.clarity = p.clarity;
+    f.hnr = D.hnr(x, sr, p.f0);
+    if (heavy) {
+      f.cpp = D.cpp(x.subarray(n - Math.min(n, 2048)), sr).cpp;
+      f.shape = D.spectralShape(x, sr, p.f0);
+    }
+    return f;
+  }
+
+  const HOP = 0.02, WIN = 0.064;
+  function frames(x, sr) {
+    const hop = Math.round(sr * HOP), win = Math.round(sr * WIN), out = [];
+    for (let s = 0, k = 0; s + win <= x.length; s += hop, k++) {
+      const f = frame(x.subarray(s, s + win), sr, k % 3 === 0);
+      f.t = (s + win) / sr; f.s = s; out.push(f);
+    }
+    return out;
+  }
+
+  // soglia di "suono presente" adattata al rumore di fondo
+  function threshold(fr, floorDb) {
+    const dbs = fr.map(f => f.db);
+    const fl = floorDb != null ? floorDb : pct(dbs, 0.03);
+    // mai sopra il livello tipico del suono: protegge le prese senza silenzio iniziale
+    return Math.min(Math.max((fl ?? -70) + 10, -56), (pct(dbs, 0.9) ?? -20) - 12);
+  }
+
+  // sequenze consecutive in cui pred è vero, tollerando pause brevi; conta le interruzioni > 60 ms
+  function runs(fr, pred, gap) {
+    const out = []; let cur = null, miss = 0;
+    fr.forEach((f, i) => {
+      if (pred(f)) {
+        if (!cur) cur = { a: i, b: i, breaks: 0 };
+        else if (miss >= 3) cur.breaks++;
+        cur.b = i; miss = 0;
+      } else if (cur) { miss++; if (miss > gap) { out.push(cur); cur = null; miss = 0 } }
+    });
+    if (cur) out.push(cur);
+    return out;
+  }
+  const longest = rs => rs.length ? rs.reduce((a, b) => (b.b - b.a > a.b - a.a ? b : a)) : null;
+  const durOf = r => (r.b - r.a + 1) * HOP;
+
+  function quality(reg) {
+    return {
+      hnr: median(reg.map(f => f.hnr)), cpp: median(reg.map(f => f.cpp)),
+      h1h2: median(reg.map(f => f.shape?.h1h2)), alpha: median(reg.map(f => f.shape?.alpha)),
+      db: 10 * Math.log10(reg.reduce((s, f) => s + Math.pow(10, f.db / 10), 0) / Math.max(1, reg.length)),
+      f0: median(reg.map(f => f.f0))
+    };
+  }
+  function weighted(parts) {
+    let s = 0, w = 0; for (const [v, k] of parts) if (v != null) { s += v * k; w += k }
+    return w ? Math.round(100 * s / w) : null;
+  }
+  const qualityLabels = m => D.classify(m);
+  const L = (key, text, tone) => ({ key, text, tone });
+
+  // ---------- esercizi ----------
+  function sustain(x, sr, fr) {
+    const rs = runs(fr, f => f.voiced, 3), run = longest(rs);
+    if (!run || durOf(run) < 0.8) return { error: 'Non ho rilevato una vocale tenuta. Emetti il suono per almeno 2 secondi, vicino al microfono.' };
+    const mpt = durOf(run);
+    let a = run.a, b = run.b;
+    if (mpt > 1.5) { const t = Math.round(0.25 / HOP); a += t; b -= t }
+    const reg = fr.slice(a, b + 1).filter(f => f.voiced);
+    const m = Object.assign({ mpt }, quality(reg));
+    const mids = reg.map(f => f.midi), n = mids.length, mx = (n - 1) / 2, my = mean(mids);
+    let sxy = 0, sxx = 0; for (let i = 0; i < n; i++) { sxy += (i - mx) * (mids[i] - my); sxx += (i - mx) ** 2 }
+    const sl = sxx ? sxy / sxx : 0; let ss = 0;
+    for (let i = 0; i < n; i++) ss += (mids[i] - (my + sl * (i - mx))) ** 2;
+    m.sdCents = 100 * Math.sqrt(ss / Math.max(1, n - 1));
+    const s0 = fr[a].s, s1 = fr[b].s + Math.round(sr * WIN), blk = Math.round(sr * 0.5);
+    let wj = 0, ws = 0, wc = 0;
+    for (let s = s0; s + blk <= s1; s += blk) {
+      const f0 = median(fr.filter(f => f.s >= s && f.s < s + blk && f.voiced).map(f => f.f0)); if (!f0) continue;
+      const p = D.perturbation(x.subarray(s, s + blk), sr, f0);
+      if (p) { wj += p.jitter * p.cycles; ws += p.shimmer * p.cycles; wc += p.cycles }
+    }
+    if (wc) { m.jitter = wj / wc; m.shimmer = ws / wc }
+    m.score = D.score(m, 'sustain');
+    m.labels = qualityLabels(m);
+    if (m.labels.some(l => l.key === 'tense')) m.score = Math.max(0, m.score - 8);
+    if (mpt < 10) m.labels.push(L('short', 'Fonazione breve', 'warn'));
+    return m;
+  }
+
+  function speech(x, sr, fr, floorDb) {
+    const thr = threshold(fr, floorDb);
+    const act = fr.filter(f => f.db > thr), voiced = fr.filter(f => f.voiced);
+    if (voiced.length < 30) return { error: 'Ho sentito troppo poco parlato. Conta da 1 a 10 o leggi la frase a voce normale.' };
+    const m = quality(voiced);
+    const mids = voiced.map(f => f.midi);
+    m.rangeSt = pct(mids, 0.9) - pct(mids, 0.1);
+    m.talk = act.length * HOP;
+    m.score = weighted([[lin(m.cpp, 27, 13), 0.5], [lin(m.hnr, 16, 5), 0.3], [lin(m.rangeSt, 4, 1), 0.2]]);
+    // nel parlato HNR e CPP sono fisiologicamente più bassi che sulla vocale tenuta: soglie spostate
+    m.labels = qualityLabels(Object.assign({}, m, { sdCents: null, h1h2: null, hnr: m.hnr != null ? m.hnr + 8 : null, cpp: m.cpp != null ? m.cpp + 3 : null }));
+    if (m.rangeSt < 2) m.labels.push(L('mono', 'Parlato monotono', 'warn'));
+    return m;
+  }
+
+  function glide(x, sr, fr, kind, dir) {
+    const run = longest(runs(fr, f => f.voiced, 8));
+    if (!run || durOf(run) < 1) return { error: 'Non ho rilevato un glissato. Tieni il suono acceso per tutta la salita (e la discesa).' };
+    const seg = fr.slice(run.a, run.b + 1), reg = seg.filter(f => f.voiced);
+    const m = Object.assign({ dur: durOf(run) }, quality(reg));
+    const mids = reg.map(f => f.midi);
+    m.lowHz = D.midiToHz(pct(mids, 0.05)); m.highHz = D.midiToHz(pct(mids, 0.95));
+    m.rangeSt = pct(mids, 0.95) - pct(mids, 0.05);
+    let jumps = 0, pairs = 0;
+    for (let i = 1; i < seg.length; i++) if (seg[i].voiced && seg[i - 1].voiced) { pairs++; if (Math.abs(seg[i].midi - seg[i - 1].midi) > 0.9) jumps++ }
+    m.breaks = run.breaks; m.jumps = jumps;
+    m.smooth = Math.max(0, 1 - (pairs ? jumps / pairs : 0) * 10 - run.breaks * 0.15);
+    const n = mids.length;
+    if (kind === 'gliss') {
+      const first = median(mids.slice(0, Math.max(1, Math.floor(n * 0.15)))), lastv = median(mids.slice(Math.floor(n * 0.85)));
+      m.dirOk = Math.sign(lastv - first) === dir;
+    } else {
+      let pk = 0; mids.forEach((v, i) => { if (v > mids[pk]) pk = i });
+      m.dirOk = pk > n * 0.2 && pk < n * 0.8;
+    }
+    m.score = D.score(m, 'move');
+    m.labels = qualityLabels(Object.assign({}, m, { sdCents: null }));
+    if (m.breaks > 0 || m.jumps > 2) m.labels.push(L('breaks', 'Salti o interruzioni', 'warn'));
+    if (m.dirOk === false) m.labels.push(L('dir', kind === 'gliss' ? 'Direzione non rispettata' : 'Manca la salita e discesa', 'warn'));
+    return m;
+  }
+
+  // rapporto s/z: due prese
+  function sz(xs, xz, sr, floorDb) {
+    const fs = frames(xs, sr), fz = frames(xz, sr);
+    const ts = threshold(fs, floorDb), tz = threshold(fz, floorDb);
+    const rs = longest(runs(fs, f => f.db > ts, 4)), rz = longest(runs(fz, f => f.db > tz, 4));
+    if (!rs || durOf(rs) < 1) return { error: 'Non ho sentito la "S". Soffiala più vicino al microfono, a lungo.' };
+    if (!rz || durOf(rz) < 1) return { error: 'Non ho sentito la "Z". Tienila sonora e costante, più vicino al microfono.' };
+    const m = { sDur: durOf(rs), zDur: durOf(rz) };
+    const zf = fz.slice(rz.a, rz.b + 1);
+    m.zVoiced = zf.filter(f => f.voiced).length / zf.length;
+    const sf = fs.slice(rs.a, rs.b + 1);
+    m.sVoiced = sf.filter(f => f.voiced).length / sf.length;
+    m.szRatio = m.sDur / m.zDur;
+    m.score = weighted([[lin(Math.abs(m.szRatio - 1), 0.15, 0.6), 0.6], [lin(Math.min(m.sDur, m.zDur), 15, 5), 0.4]]);
+    m.labels = [];
+    if (m.szRatio >= 0.8 && m.szRatio <= 1.2) m.labels.push(L('szok', 'Rapporto s/z nella norma', 'good'));
+    else if (m.szRatio > 1.2 && m.szRatio <= 1.4) m.labels.push(L('szmid', 'Rapporto s/z al limite', 'warn'));
+    else if (m.szRatio > 1.4) m.labels.push(L('szhigh', 'Rapporto s/z elevato', 'bad'));
+    if (m.szRatio < 0.8) m.labels.push(L('szlow', 'La S è più corta della Z', 'warn'));
+    if (Math.min(m.sDur, m.zDur) < 8) m.labels.push(L('breath', 'Durate brevi: lavora sul fiato', 'warn'));
+    if (m.sVoiced > 0.4) m.labels.push(L('sv', 'La S suona sonora', 'warn'));
+    if (m.zVoiced < 0.6) m.labels.push(L('zu', 'La Z perde sonorità', 'warn'));
+    m.fr = [fs, fz];
+    return m;
+  }
+
+  // attacco della voce: inviluppo a 2 ms
+  function envelope(x, sr) {
+    const hop = Math.round(sr * 0.002), w = Math.round(sr * 0.005), out = new Float32Array(Math.floor((x.length - w) / hop));
+    for (let k = 0; k < out.length; k++) {
+      let s = 0; const a = k * hop; for (let i = a; i < a + w; i++) s += x[i] * x[i];
+      out[k] = 10 * Math.log10(s / w + 1e-12);
+    }
+    return out;
+  }
+  function onset(x, sr, fr, floorDb) {
+    const thr = threshold(fr, floorDb);
+    const segs = runs(fr, f => f.db > thr, 4).filter(r => durOf(r) >= 0.25);
+    if (!segs.length) return { error: 'Non ho rilevato vocali. Ripeti "a" cinque volte, con una pausa fra una e l\'altra.' };
+    const env = envelope(x, sr), E = 0.002;
+    const list = segs.map(r => {
+      const tA = fr[r.a].t - WIN, tB = fr[r.b].t;
+      const kA = Math.max(0, Math.floor((tA - 0.1) / E)), kB = Math.min(env.length - 1, Math.floor(tB / E));
+      const mid = Array.from(env.slice(Math.floor((tA + (tB - tA) * 0.3) / E), Math.floor((tA + (tB - tA) * 0.7) / E)));
+      const plat = median(mid) ?? -30;
+      let k0 = -1, k90 = -1;
+      for (let k = kA; k <= kB; k++) { if (k0 < 0 && env[k] > plat - 25) k0 = k; if (k0 >= 0 && env[k] > plat - 3) { k90 = k; break } }
+      const rise = k0 >= 0 && k90 >= 0 ? (k90 - k0) * E * 1000 : null;
+      const fv = fr.slice(r.a, r.b + 1).find(f => f.voiced);
+      const vStart = fv ? fv.t - WIN / 2 : null;
+      const lead = vStart != null && k0 >= 0 ? (vStart - k0 * E) * 1000 : null;
+      const type = lead != null && lead > 130 ? 'soffiato' : rise != null && rise < 25 ? 'duro' : 'morbido';
+      return { rise, lead, type, t: k0 * E };
+    });
+    const reg = fr.filter(f => f.voiced);
+    const m = Object.assign({ onsets: list, reps: list.length }, quality(reg));
+    m.soft = list.filter(o => o.type === 'morbido').length;
+    m.softPct = 100 * m.soft / list.length;
+    m.riseMs = median(list.map(o => o.rise));
+    m.score = weighted([[m.softPct / 100, 0.75], [lin(m.hnr, 20, 8), 0.25]]);
+    m.labels = [L('soft', `${m.soft} su ${list.length} attacchi morbidi`, m.softPct >= 80 ? 'good' : m.softPct >= 50 ? 'warn' : 'bad')];
+    const hard = list.filter(o => o.type === 'duro').length, br = list.filter(o => o.type === 'soffiato').length;
+    if (hard) m.labels.push(L('hard', `${hard} attacchi duri`, 'warn'));
+    if (br) m.labels.push(L('bron', `${br} attacchi soffiati`, 'warn'));
+    if (list.length < 4) m.labels.push(L('few', 'Poche ripetizioni', 'warn'));
+    return m;
+  }
+
+  // messa di voce: piano → forte → piano
+  function mdv(x, sr, fr) {
+    const run = longest(runs(fr, f => f.voiced, 4));
+    if (!run || durOf(run) < 2) return { error: 'Non ho rilevato un crescendo tenuto. Parti piano, cresci e torna piano senza interrompere il suono.' };
+    const seg = fr.slice(run.a, run.b + 1), reg = seg.filter(f => f.voiced);
+    const m = Object.assign({ dur: durOf(run) }, quality(reg));
+    const db = seg.map(f => f.db), sm = db.map((_, i) => mean(db.slice(Math.max(0, i - 2), i + 3)));
+    m.dynRange = pct(sm, 0.95) - pct(sm, 0.05);
+    let pk = 0; sm.forEach((v, i) => { if (v > sm[pk]) pk = i });
+    m.peakPos = pk / Math.max(1, sm.length - 1);
+    let jumps = 0; for (let i = 1; i < db.length; i++) if (Math.abs(db[i] - db[i - 1]) > 6) jumps++;
+    m.smooth = Math.max(0, 1 - jumps / db.length * 10);
+    const ord = reg.map(f => f).sort((a, b) => a.db - b.db), q = Math.max(1, Math.floor(ord.length / 4));
+    m.pitchRise = 100 * (median(ord.slice(-q).map(f => f.midi)) - median(ord.slice(0, q).map(f => f.midi)));
+    m.score = weighted([[lin(m.dynRange, 18, 5), 0.35], [lin(Math.abs(m.pitchRise), 40, 250), 0.25], [m.smooth, 0.2], [lin(m.hnr, 22, 8), 0.2]]);
+    m.labels = [];
+    if (m.dynRange >= 12 && m.smooth > 0.8 && m.peakPos > 0.2 && m.peakPos < 0.8) m.labels.push(L('mdvok', 'Crescendo controllato', 'good'));
+    if (m.dynRange < 10) m.labels.push(L('dyn', 'Dinamica ridotta', 'warn'));
+    if (m.peakPos <= 0.2 || m.peakPos >= 0.8) m.labels.push(L('shape', 'Manca il ritorno al piano', 'warn'));
+    if (m.pitchRise > 150) m.labels.push(L('prise', 'Il tono sale con il volume', 'warn'));
+    if (m.smooth < 0.8) m.labels.push(L('jerk', 'Variazioni a scatti', 'warn'));
+    return m;
+  }
+
+  // fonazione semi-occlusa (cannuccia, labbra vibranti)
+  function sovt(x, sr, fr, floorDb) {
+    const thr = threshold(fr, floorDb);
+    const run = longest(runs(fr, f => f.db > thr, 6));
+    if (!run || durOf(run) < 1) return { error: 'Non ho sentito il suono. Avvicina il telefono alla cannuccia o alle labbra.' };
+    const seg = fr.slice(run.a, run.b + 1);
+    const m = { dur: durOf(run), breaks: run.breaks };
+    const db = seg.map(f => f.db), sm = db.map((_, i) => mean(db.slice(Math.max(0, i - 2), i + 3)));
+    const mu = mean(sm.slice(Math.floor(sm.length * .1), Math.ceil(sm.length * .9)));
+    const core = sm.slice(Math.floor(sm.length * .1), Math.ceil(sm.length * .9));
+    m.levelSd = Math.sqrt(mean(core.map(v => (v - mu) ** 2)));
+    m.voicedPct = 100 * seg.filter(f => f.voiced).length / seg.length;
+    m.f0 = median(seg.filter(f => f.voiced).map(f => f.f0));
+    m.db = mu;
+    m.score = weighted([[lin(m.dur, 15, 4), 0.4], [lin(m.levelSd, 1, 5), 0.4], [Math.max(0, 1 - m.breaks * 0.25), 0.2]]);
+    m.labels = [];
+    if (m.levelSd <= 2 && !m.breaks) m.labels.push(L('flow', 'Flusso costante', 'good'));
+    if (m.levelSd > 2) m.labels.push(L('unflow', 'Flusso irregolare', 'warn'));
+    if (m.breaks) m.labels.push(L('breaks', 'Interruzioni del suono', 'warn'));
+    if (m.dur < 8) m.labels.push(L('short', 'Durata breve', 'warn'));
+    return m;
+  }
+
+  return { frame, frames, runs, threshold, median, pct, sustain, speech, glide, sz, onset, mdv, sovt, HOP, WIN };
+})();
+if (typeof module !== 'undefined') module.exports = AN;
+
+</script>
+<script>
 (() => {
 const $ = s => document.querySelector(s);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -548,536 +824,447 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('vocalis.' + k); return v ? JSON.parse(v) : d } catch { return d } },
   set(k, v) { try { localStorage.setItem('vocalis.' + k, JSON.stringify(v)) } catch {} }
 };
-const fmt = (v, d = 1) => v == null || isNaN(v) ? '—' : v.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmt = (v, d = 1) => v == null || !isFinite(v) ? '—' : (+v).toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d });
+const median = AN.median, R = DSP.REF;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// ---------- impostazioni ----------
-const PRESETS = { m: { low: 48, high: 64, target: 53 }, f: { low: 57, high: 76, target: 65 } };
-let settings = Object.assign({ profile: 'm' }, PRESETS.m, store.get('settings', {}));
-function fillNotes(sel, val) {
-  sel.innerHTML = '';
-  for (let m = 36; m <= 84; m++) {
-    const o = document.createElement('option'); o.value = m;
-    o.textContent = DSP.noteName(m) + ' · ' + Math.round(DSP.midiToHz(m)) + ' Hz';
-    sel.appendChild(o);
-  }
-  sel.value = val;
-}
-function renderSettings() {
-  $('#sProfile').value = settings.profile;
-  fillNotes($('#sLow'), settings.low); fillNotes($('#sHigh'), settings.high); fillNotes($('#sTarget'), settings.target);
-}
-$('#sProfile').onchange = e => { settings = Object.assign({ profile: e.target.value }, PRESETS[e.target.value]); store.set('settings', settings); renderSettings() };
-['sLow', 'sHigh', 'sTarget'].forEach(id => $('#' + id).onchange = e => {
-  const k = { sLow: 'low', sHigh: 'high', sTarget: 'target' }[id]; settings[k] = +e.target.value;
-  if (settings.high <= settings.low + 2) settings.high = settings.low + 3;
-  store.set('settings', settings); renderSettings();
-});
+let settings = Object.assign({ profile: 'm' }, store.get('settings', {}));
+let history = store.get('history', []);
 
 // ---------- esercizi ----------
-const VOWEL_TIP = { A: 'bocca aperta e rilassata', E: 'labbra distese, lingua avanti', I: 'sorriso leggero, senza stringere la gola', O: 'labbra arrotondate', U: 'labbra in avanti, suono raccolto' };
+const VOWEL_TIP = { A: 'bocca aperta e rilassata', E: 'labbra distese, lingua avanti', I: 'sorriso leggero, gola libera', O: 'labbra arrotondate', U: 'labbra in avanti, suono raccolto' };
+const SENTENCE = 'Il sole di settembre scalda le pietre del paese, mentre il mare lontano brilla sotto un cielo sereno.';
 const EX = {};
-for (const v of 'AEIOU') EX['v' + v] = { name: 'Vocale ' + v, kind: 'sustain', glyph: v, max: 25,
-  short: 'Fonazione sostenuta, ' + VOWEL_TIP[v] + '.',
-  steps: ['Inspira con calma dal naso.', `Emetti una "${v}" alla tua altezza comoda, volume di conversazione.`, 'Mantieni il suono stabile più a lungo che puoi, senza forzare il finale.', 'Quando smetti, l\'analisi parte da sola.'] };
-EX.nota = { name: 'Nota sostenuta', kind: 'sustain', target: true, max: 12, glyphSvg: 'M4 18h48',
-  short: 'Ascolta la nota di riferimento e tienila ferma per 8 secondi.',
-  steps: ['Premi Inizia: senti la nota di riferimento.', 'Dopo il conto alla rovescia intona la stessa nota su "A" o "U".', 'Resta sulla banda blu del grafico per circa 8 secondi.'] , stopAfter: 8 };
-EX.glissUp = { name: 'Glissato ascendente', kind: 'gliss', dir: 1, max: 7, glyphSvg: 'M4 24C20 24 34 4 52 4',
-  short: 'Scivola senza scalini dalla nota grave alla nota acuta.',
-  steps: ['Parti dalla nota grave impostata.', 'Sali in modo continuo, come una sirena lenta, in circa 4 secondi.', 'Segui la linea guida; niente salti né interruzioni.'] };
-EX.glissDown = { name: 'Glissato discendente', kind: 'gliss', dir: -1, max: 7, glyphSvg: 'M4 4C20 4 34 24 52 24',
-  short: 'Scendi in modo continuo dalla nota acuta alla grave.',
-  steps: ['Parti dalla nota acuta impostata, senza spingere.', 'Scendi lentamente fino alla nota grave in circa 4 secondi.', 'Mantieni il suono acceso fino in fondo.'] };
-EX.sirena = { name: 'Sirena vocale', kind: 'siren', max: 10, glyphSvg: 'M4 24C14 24 20 4 28 4S42 24 52 24',
-  short: 'Su "U" o con le labbra che vibrano: sali e ridiscendi.',
-  steps: ['Usa una "U" morbida o la vibrazione delle labbra (brrr).', 'Sali dalla nota grave fino all\'acuto in circa 3–4 secondi.', 'Ridiscendi senza interrompere il suono.'] };
-EX.free = { name: 'Ascolto libero', kind: 'free' };
+for (const v of 'AEIOU') EX['v' + v] = {
+  name: 'Vocale ' + v, kind: 'sustain', glyph: v, plot: 'pitch', group: 'v', max: 45, stop: { by: 'voiced', min: 1, sil: 0.7 },
+  short: 'Tempo massimo di fonazione e qualità, ' + VOWEL_TIP[v] + '.',
+  steps: ['Inspira con calma, senza sollevare le spalle.', `Emetti una "${v}" all'altezza in cui parli normalmente, a volume di conversazione.`, 'Tienila stabile più a lungo che puoi, senza spingere sul finale.', 'Quando smetti, l\'analisi parte da sola.']
+};
+EX.sz = { name: 'Rapporto s/z', kind: 'sz', plot: 'level', group: 'e', max: 50, stop: { by: 'active', min: 1, sil: 0.8 }, glyphText: 's/z',
+  short: 'Confronta la durata di una "S" soffiata e di una "Z" sonora.',
+  phases: [
+    { tag: 'S', steps: ['Inspira profondamente.', 'Emetti una "sssss" costante, più a lungo che puoi.', 'Fermati quando finisce il fiato: l\'app passa alla seconda fase.'] },
+    { tag: 'Z', steps: ['Inspira di nuovo profondamente.', 'Emetti una "zzzzz" sonora (come in "zero"), più a lungo che puoi.', 'Mantieni la vibrazione fino in fondo.'] }
+  ] };
+EX.speech = { name: 'Parlato', kind: 'speech', plot: 'pitch', group: 'e', max: 45, stop: { by: 'active', min: 3, sil: 2 }, glyphText: '1·2·3',
+  short: 'Leggi una frase o conta da 1 a 20: qualità della voce nel parlato reale.',
+  steps: ['Leggi la frase qui sotto a voce normale, come se parlassi a una persona davanti a te.', 'In alternativa conta lentamente da 1 a 20.', 'Quando resti in silenzio per 2 secondi, l\'analisi parte.'], text: SENTENCE };
+EX.onset = { name: 'Attacco morbido', kind: 'onset', plot: 'level', group: 't', max: 30, stop: { by: 'active', reps: 5, sil: 1.2 }, glyphSvg: 'M4 24C14 24 18 6 30 6h22',
+  short: 'Cinque "a" che iniziano dolcemente, senza colpo di glottide.',
+  steps: ['Pensa a una leggera "h" prima della vocale: "(h)a".', 'Emetti una "a" breve (mezzo secondo) che nasce morbida.', 'Fai una pausa di un secondo e ripeti, 5 volte in tutto.', 'Evita sia il colpo secco sia la fuga d\'aria prima del suono.'] };
+EX.mdv = { name: 'Messa di voce', kind: 'mdv', plot: 'level', group: 't', max: 25, stop: { by: 'voiced', min: 2, sil: 0.8 }, glyphSvg: 'M4 22C18 22 22 4 28 4S38 22 52 22',
+  short: 'Su una vocale: piano, crescendo e ritorno al piano.',
+  steps: ['Scegli la vocale "a" o "o" alla tua altezza comoda.', 'Parti piano, cresci gradualmente fino a un forte comodo (3 secondi).', 'Torna al piano nello stesso tempo, senza cambiare nota e senza interrompere.'] };
+EX.sovt = { name: 'Cannuccia o labbra', kind: 'sovt', plot: 'level', group: 't', max: 45, stop: { by: 'active', min: 1, sil: 1 }, glyphSvg: 'M4 14c4-6 8 6 12 0s8 6 12 0 8 6 12 0 8 6 12 0',
+  short: 'Fonazione in cannuccia o con le labbra che vibrano (brrr): flusso costante.',
+  steps: ['Metti una cannuccia tra le labbra (o fai vibrare le labbra: "brrr").', 'Emetti una "u" continua attraverso la cannuccia, a volume comodo.', 'Mantieni il flusso uguale più a lungo che puoi. Tieni il telefono vicino.'] };
+EX.glissUp = { name: 'Glissato ascendente', kind: 'gliss', dir: 1, plot: 'pitch', group: 't', max: 12, stop: { by: 'voiced', min: 1, sil: 0.8 }, glyphSvg: 'M4 24C20 24 34 4 52 4',
+  short: 'Dal grave all\'acuto senza scalini, nella tua estensione comoda.',
+  steps: ['Parti da una nota grave comoda su "u" o con le labbra che vibrano.', 'Sali lentamente e in modo continuo, in circa 4 secondi.', 'Fermati prima di sforzare: conta la fluidità, non quanto arrivi in alto.'] };
+EX.glissDown = { name: 'Glissato discendente', kind: 'gliss', dir: -1, plot: 'pitch', group: 't', max: 12, stop: { by: 'voiced', min: 1, sil: 0.8 }, glyphSvg: 'M4 4C20 4 34 24 52 24',
+  short: 'Dall\'acuto al grave in modo continuo, senza spingere.',
+  steps: ['Parti da una nota medio-acuta comoda, leggera.', 'Scendi lentamente fino al grave comodo, in circa 4 secondi.', 'Mantieni il suono acceso fino in fondo, senza raschiare.'] };
+EX.sirena = { name: 'Sirena vocale', kind: 'siren', plot: 'pitch', group: 't', max: 14, stop: { by: 'voiced', min: 1, sil: 0.8 }, glyphSvg: 'M4 24C14 24 20 4 28 4S42 24 52 24',
+  short: 'Sali e ridiscendi senza interruzioni, su "u" o "ng".',
+  steps: ['Usa una "u" morbida o la "ng" di "panca".', 'Sali dal grave all\'acuto comodo e ridiscendi, in circa 6 secondi.', 'Niente salti: il grafico deve essere una curva continua.'] };
+EX.free = { name: 'Ascolto libero', kind: 'free', plot: 'pitch' };
+const LEGACY = { nota: 'Nota sostenuta (versione precedente)' };
+const exName = k => EX[k]?.name ?? LEGACY[k] ?? k;
 
-function lastOf(key) { const h = history.filter(r => r.ex === key); return h.length ? h[h.length - 1] : null }
+function habitualHz() {
+  const v = history.filter(r => /^v[AEIOU]$/.test(r.ex) || r.ex === 'speech').map(r => r.m?.f0).filter(Boolean).slice(-8);
+  return v.length ? median(v) : null;
+}
+function centerHz() { return habitualHz() ?? (settings.profile === 'f' ? 210 : 120) }
+function renderSettings() {
+  $('#sProfile').value = settings.profile;
+  const h = habitualHz();
+  $('#habit').textContent = h ? `${fmt(h, 0)} Hz` : 'si calcola dopo la prima vocale';
+}
+$('#sProfile').onchange = e => { settings.profile = e.target.value; store.set('settings', settings); renderSettings() };
+
+const lastOf = k => { for (let i = history.length - 1; i >= 0; i--) if (history[i].ex === k) return history[i]; return null };
 function renderGrid() {
   const card = key => {
     const e = EX[key], l = lastOf(key);
-    const glyph = e.glyph ? e.glyph : `<svg viewBox="0 0 56 28"><path d="${e.glyphSvg}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+    const glyph = e.glyph ? e.glyph : e.glyphText ? `<span style="font-size:1.35rem">${e.glyphText}</span>` : `<svg viewBox="0 0 56 28"><path d="${e.glyphSvg}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
     return `<button class="excard" data-ex="${key}"><span class="glyph">${glyph}</span><h3>${e.name}</h3><small>${e.short}</small>${l ? `<span class="last">ultimo: ${l.score ?? '—'}/100 · ${new Date(l.date).toLocaleDateString('it-IT')}</span>` : ''}</button>`;
   };
-  $('#gridVowels').innerHTML = ['vA', 'vE', 'vI', 'vO', 'vU'].map(card).join('');
-  $('#gridMoves').innerHTML = ['nota', 'glissUp', 'glissDown', 'sirena'].map(card).join('');
+  $('#gVowels').innerHTML = ['vA', 'vE', 'vI', 'vO', 'vU'].map(card).join('');
+  $('#gEval').innerHTML = ['sz', 'speech'].map(card).join('');
+  $('#gTherapy').innerHTML = ['onset', 'mdv', 'sovt', 'glissUp', 'glissDown', 'sirena'].map(card).join('');
   document.querySelectorAll('.excard[data-ex]').forEach(b => b.onclick = () => openSession(b.dataset.ex));
+  renderSettings();
 }
 
 // ---------- motore audio ----------
 const engine = {
-  ctx: null, stream: null, sr: 48000, ring: null, ringPos: 0, frames: [], t: 0, rec: null, cb: 0,
-  lastPert: null, lastShape: null, voicedRun: 0,
+  ctx: null, ring: null, ringPos: 0, frames: [], t: 0, rec: null, cb: 0, voicedRun: 0, lastPert: null, lastShape: null, sr: 48000,
   async start() {
     if (this.ctx) { if (this.ctx.state === 'suspended') await this.ctx.resume(); return true }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { micProblem('unsupported'); return false }
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
-    } catch (e) { micProblem(e.name); return false }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } }) }
+    catch (e) { micProblem(e.name); return false }
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    this.sr = this.ctx.sampleRate;
-    this.ring = new Float32Array(this.sr * 2); this.ringPos = 0;
-    const src = this.ctx.createMediaStreamSource(this.stream);
-    const proc = this.ctx.createScriptProcessor(2048, 1, 1);
-    const mute = this.ctx.createGain(); mute.gain.value = 0;
-    src.connect(proc); proc.connect(mute); mute.connect(this.ctx.destination);
+    this.sr = this.ctx.sampleRate; this.ring = new Float32Array(this.sr * 2);
+    const src = this.ctx.createMediaStreamSource(stream), proc = this.ctx.createScriptProcessor(2048, 1, 1), mute = this.ctx.createGain();
+    mute.gain.value = 0; src.connect(proc); proc.connect(mute); mute.connect(this.ctx.destination);
     proc.onaudioprocess = ev => this.onAudio(ev.inputBuffer.getChannelData(0));
-    this.proc = proc;
-    $('#micNotice').hidden = true;
+    this.proc = proc; $('#micNotice').hidden = true;
     try { await navigator.wakeLock?.request('screen') } catch {}
     return true;
   },
-  latest(n) {
-    const out = new Float32Array(n), L = this.ring.length;
-    let p = (this.ringPos - n + L) % L;
-    for (let i = 0; i < n; i++) { out[i] = this.ring[p]; p = (p + 1) % L }
-    return out;
-  },
+  latest(n) { const o = new Float32Array(n), L = this.ring.length; let p = (this.ringPos - n + L) % L; for (let i = 0; i < n; i++) { o[i] = this.ring[p]; p = (p + 1) % L } return o },
   onAudio(buf) {
     for (let i = 0; i < buf.length; i++) { this.ring[this.ringPos] = buf[i]; this.ringPos = (this.ringPos + 1) % this.ring.length }
     if (this.rec) this.rec.push(new Float32Array(buf));
-    this.t += buf.length / this.sr; this.cb++;
-    const f = analyzeFrame(this.latest(Math.round(this.sr * 0.064)), this.sr, this.cb % 3 === 0);
+    const dt = buf.length / this.sr; this.t += dt; this.cb++;
+    const f = AN.frame(this.latest(Math.round(this.sr * AN.WIN)), this.sr, this.cb % 3 === 0);
     f.t = this.t;
-    if (f.voiced) { this.voicedRun = (this.voicedRun || 0) + buf.length / this.sr } else this.voicedRun = 0;
-    if (f.voiced && this.cb % 4 === 0 && this.voicedRun > 0.5) {
-      this.lastPert = DSP.perturbation(this.latest(Math.round(this.sr * 0.5)), this.sr, f.f0);
-    }
+    this.voicedRun = f.voiced ? this.voicedRun + dt : 0;
+    if (f.voiced && this.cb % 4 === 0 && this.voicedRun > 0.5) this.lastPert = DSP.perturbation(this.latest(Math.round(this.sr * 0.5)), this.sr, f.f0);
     if (f.shape) this.lastShape = f.shape;
-    this.frames.push(f);
-    if (this.frames.length > 600) this.frames.splice(0, this.frames.length - 600);
-    session.onFrame?.(f);
+    this.frames.push(f); if (this.frames.length > 600) this.frames.splice(0, this.frames.length - 600);
+    session.onFrame?.(f, dt);
   }
 };
-
-function decimate2(x) { const y = new Float32Array(x.length >> 1); for (let i = 0; i < y.length; i++) y[i] = 0.5 * (x[2 * i] + x[2 * i + 1]); return y }
-// Analisi di un frame (~64 ms)
-function analyzeFrame(x, sr, heavy) {
-  const n = x.length, last = x.subarray(n - Math.min(n, Math.round(sr * 0.043)));
-  const db = DSP.rmsDb(last);
-  const f = { db, voiced: false, f0: 0 };
-  if (db < -58) return f;
-  const ds = sr >= 32000 ? 2 : 1;
-  const p = DSP.yin(ds === 2 ? decimate2(x) : x, sr / ds, 65, 1000, 0.15);
-  if (!p.f0 || p.clarity < 0.72) return f;
-  f.voiced = true; f.f0 = p.f0; f.midi = DSP.hzToMidi(p.f0); f.clarity = p.clarity;
-  f.hnr = DSP.hnr(x, sr, p.f0);
-  if (heavy) {
-    const w = x.subarray(n - Math.min(n, 2048));
-    f.cpp = DSP.cpp(w, sr).cpp;
-    f.shape = DSP.spectralShape(x, sr, p.f0);
-  }
-  return f;
-}
-
 function micProblem(kind) {
   const el = $('#micNotice'); el.hidden = false;
   let framed = false; try { framed = window.self !== window.top } catch { framed = true }
-  if (framed) {
-    el.innerHTML = '<b>Il microfono è bloccato in questa anteprima.</b> Stai vedendo Vocalis dentro un\'altra pagina, che non lascia passare il microfono. Scarica il file vocalis.html e aprilo direttamente nel browser (doppio clic sul file dal computer). Nel frattempo puoi analizzare un file audio registrato.';
-    return;
-  }
-  if (kind === 'NotAllowedError' || kind === 'SecurityError')
-    el.innerHTML = '<b>Microfono non autorizzato.</b> Consenti l\'accesso al microfono dalle impostazioni del browser (icona a sinistra dell\'indirizzo) e ricarica la pagina.';
-  else if (kind === 'NotFoundError')
-    el.innerHTML = '<b>Nessun microfono trovato.</b> Collega un microfono o usa il telefono.';
-  else
-    el.innerHTML = '<b>Il microfono non è disponibile qui.</b> Apri Vocalis in Chrome, Edge o Firefox da un indirizzo https (oppure con doppio clic sul file dal computer). Puoi comunque analizzare un file audio registrato.';
+  if (framed) el.innerHTML = '<b>Il microfono è bloccato in questa anteprima.</b> Apri Vocalis direttamente nel browser (dal link di GitHub Pages o con doppio clic sul file). Intanto puoi analizzare un file audio registrato.';
+  else if (kind === 'NotAllowedError' || kind === 'SecurityError') el.innerHTML = '<b>Microfono non autorizzato.</b> Tocca l\'icona a sinistra dell\'indirizzo, consenti il microfono e ricarica la pagina.';
+  else if (kind === 'NotFoundError') el.innerHTML = '<b>Nessun microfono trovato.</b> Collega un microfono o usa il telefono.';
+  else el.innerHTML = '<b>Il microfono non è disponibile qui.</b> Apri Vocalis in Chrome da un indirizzo https (GitHub Pages) oppure con doppio clic sul file dal computer. Puoi comunque analizzare un file audio registrato.';
 }
 
-// ---------- analisi di una registrazione completa ----------
-function concat(chunks) { let n = 0; for (const c of chunks) n += c.length; const o = new Float32Array(n); let p = 0; for (const c of chunks) { o.set(c, p); p += c.length } return o }
-const median = a => { const b = a.filter(v => v != null && isFinite(v)).sort((p, q) => p - q); return b.length ? b[Math.floor(b.length / 2)] : null };
-
-function framesOf(x, sr) {
-  const hop = Math.round(sr * 0.02), win = Math.round(sr * 0.064), out = [];
-  for (let s = 0, k = 0; s + win <= x.length; s += hop, k++) {
-    const f = analyzeFrame(x.subarray(s, s + win), sr, k % 3 === 0);
-    f.t = (s + win) / sr; f.s = s; out.push(f);
-  }
-  return { frames: out, hop };
-}
-// sequenze sonore consecutive, tollerando piccole pause
-function runs(frames, gap) {
-  const out = []; let cur = null, miss = 0;
-  frames.forEach((f, i) => {
-    if (f.voiced) { if (!cur) cur = { a: i, b: i, breaks: 0 }; else if (miss) cur.breaks += miss >= 4 ? 1 : 0; cur.b = i; miss = 0 }
-    else if (cur) { miss++; if (miss > gap) { out.push(cur); cur = null; miss = 0 } }
-  });
-  if (cur) out.push(cur);
-  return out;
-}
-
-function analyzeTake(x, sr, key) {
-  const ex = EX[key] || EX.vA, kind = ex.kind;
-  const { frames, hop } = framesOf(x, sr);
-  const dt = hop / sr;
-  const rs = runs(frames, kind === 'sustain' ? 3 : 8);
-  if (!rs.length) return { error: 'Non ho rilevato voce. Avvicinati al microfono e riprova.' };
-  const run = rs.reduce((a, b) => (b.b - b.a > a.b - a.a ? b : a));
-  const dur = (run.b - run.a + 1) * dt;
-  if (dur < 0.6) return { error: 'Il suono è troppo breve per essere analizzato: tienilo almeno 2 secondi.' };
-  let a = run.a, b = run.b;
-  if (kind === 'sustain' && dur > 1.5) { const trim = Math.round(0.25 / dt); a += trim; b -= trim }
-  const reg = frames.slice(a, b + 1).filter(f => f.voiced);
-  const m = { kind, mpt: dur, frames: frames.map(f => [ +f.t.toFixed(3), f.voiced ? +f.midi.toFixed(2) : null, f.hnr != null ? +f.hnr.toFixed(1) : null ]) };
-  m.hnr = median(reg.map(f => f.hnr));
-  m.cpp = median(reg.map(f => f.cpp));
-  m.h1h2 = median(reg.map(f => f.shape?.h1h2));
-  m.alpha = median(reg.map(f => f.shape?.alpha));
-  m.db = 10 * Math.log10(reg.reduce((s, f) => s + Math.pow(10, f.db / 10), 0) / reg.length);
-  const mids = reg.map(f => f.midi);
-  m.f0 = median(reg.map(f => f.f0)); m.midi = DSP.hzToMidi(m.f0);
-  if (kind === 'sustain') {
-    // stabilità: deviazione standard in cent dopo aver tolto la deriva lineare
-    const n = mids.length, xs = mids.map((_, i) => i);
-    const mx = (n - 1) / 2, my = mids.reduce((s, v) => s + v, 0) / n;
-    let sxy = 0, sxx = 0; for (let i = 0; i < n; i++) { sxy += (i - mx) * (mids[i] - my); sxx += (i - mx) ** 2 }
-    const sl = sxx ? sxy / sxx : 0;
-    let ss = 0; for (let i = 0; i < n; i++) ss += (mids[i] - (my + sl * (i - mx))) ** 2;
-    m.sdCents = 100 * Math.sqrt(ss / Math.max(1, n - 1));
-    m.driftCents = 100 * sl * (n - 1);
-    // jitter / shimmer su blocchi di 0,5 s
-    const s0 = frames[a].s, s1 = frames[b].s + Math.round(sr * 0.064), blk = Math.round(sr * 0.5);
-    let wj = 0, ws = 0, wc = 0;
-    for (let s = s0; s + blk <= s1; s += blk) {
-      const fr = frames.filter(f => f.s >= s && f.s < s + blk && f.voiced).map(f => f.f0);
-      const f0 = median(fr); if (!f0) continue;
-      const p = DSP.perturbation(x.subarray(s, s + blk), sr, f0);
-      if (p) { wj += p.jitter * p.cycles; ws += p.shimmer * p.cycles; wc += p.cycles }
-    }
-    if (wc) { m.jitter = wj / wc; m.shimmer = ws / wc }
-    if (ex.target) m.targetCents = 100 * (m.midi - settings.target);
-  } else {
-    const sorted = [...mids].sort((p, q) => p - q);
-    const p5 = sorted[Math.floor(sorted.length * 0.05)], p95 = sorted[Math.floor(sorted.length * 0.95)];
-    m.rangeSt = p95 - p5; m.lowMidi = p5; m.highMidi = p95;
-    const seg = frames.slice(run.a, run.b + 1);
-    let jumps = 0, pairs = 0;
-    for (let i = 1; i < seg.length; i++) if (seg[i].voiced && seg[i - 1].voiced) { pairs++; if (Math.abs(seg[i].midi - seg[i - 1].midi) > 0.9) jumps++ }
-    m.breaks = run.breaks; m.jumps = jumps;
-    m.smooth = Math.max(0, 1 - (pairs ? jumps / pairs : 0) * 10 - run.breaks * 0.15);
-    if (kind === 'gliss') {
-      const n = mids.length, half = Math.floor(n / 2);
-      const first = median(mids.slice(0, Math.max(1, Math.floor(n * 0.15)))), lastv = median(mids.slice(Math.floor(n * 0.85)));
-      m.dirOk = Math.sign(lastv - first) === ex.dir;
-    }
-    if (kind === 'siren') {
-      let pk = 0; mids.forEach((v, i) => { if (v > mids[pk]) pk = i });
-      m.dirOk = pk > mids.length * 0.2 && pk < mids.length * 0.8;
-    }
-  }
-  m.score = DSP.score(m, kind === 'sustain' ? 'sustain' : 'move');
-  m.labels = DSP.classify(kind === 'sustain' ? m : Object.assign({}, m, { sdCents: null }));
-  if (m.labels.some(l => l.key === 'tense') && m.score != null) m.score = Math.max(0, m.score - 8);
-  if (kind === 'sustain' && !ex.target && m.mpt < 8) m.labels.push({ key: 'short', text: 'Fonazione breve', tone: 'warn' });
-  if (kind !== 'sustain') {
-    if (m.breaks > 0 || m.jumps > 2) m.labels.push({ key: 'breaks', text: 'Salti o interruzioni', tone: 'warn' });
-    if (m.rangeSt < 7) m.labels.push({ key: 'range', text: 'Escursione limitata', tone: 'warn' });
-    if (m.dirOk === false) m.labels.push({ key: 'dir', text: 'Direzione non rispettata', tone: 'warn' });
-  }
-  if (ex.target && Math.abs(m.targetCents) > 50) m.labels.push({ key: 'off', text: 'Nota diversa dal target', tone: 'warn' });
-  return m;
-}
-
-// ---------- disegno del grafico del pitch ----------
+// ---------- grafico ----------
 function sizeCanvas(cv) {
   const dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
   const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
   if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h }
-  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { g, w: r.width, h: r.height };
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); return { g, w: r.width, h: r.height };
 }
+const HZ_TICKS = [50, 60, 70, 80, 90, 100, 110, 125, 140, 160, 180, 200, 225, 250, 280, 315, 350, 400, 450, 500, 560, 630, 710, 800, 900];
 function hnrColor(h) { return h == null ? css('--muted') : h >= 20 ? css('--good') : h >= 12 ? css('--warn') : css('--bad') }
-function drawPitch(cv, pts, opts) {
-  // pts: [t, midi|null, hnr]; opts: {t0, t1, lo, hi, guide: fn(t)->midi|null, band}
+function drawPlot(cv, pts, o) {
   const { g, w, h } = sizeCanvas(cv);
   const padL = 46, padR = 8, padT = 8, padB = 18;
-  const X = t => padL + (t - opts.t0) / (opts.t1 - opts.t0) * (w - padL - padR);
-  const Y = m => padT + (opts.hi - m) / (opts.hi - opts.lo) * (h - padT - padB);
-  g.clearRect(0, 0, w, h);
-  g.font = '10px ' + css('--f-mono'); g.textBaseline = 'middle';
+  const X = t => padL + (t - o.t0) / Math.max(.5, o.t1 - o.t0) * (w - padL - padR);
+  const Y = v => padT + (o.hi - v) / (o.hi - o.lo) * (h - padT - padB);
+  g.clearRect(0, 0, w, h); g.font = '10px ' + css('--f-mono'); g.textBaseline = 'middle';
   const line = css('--line'), muted = css('--muted');
-  for (let m = Math.ceil(opts.lo); m <= Math.floor(opts.hi); m++) {
-    const pc = ((m % 12) + 12) % 12, natural = [0, 2, 4, 5, 7, 9, 11].includes(pc);
-    const step = (opts.hi - opts.lo) > 24 ? (pc === 0 || pc === 7) : natural;
-    g.strokeStyle = line; g.globalAlpha = pc === 0 ? 1 : natural ? .6 : .25; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(padL, Y(m) + .5); g.lineTo(w - padR, Y(m) + .5); g.stroke();
-    g.globalAlpha = 1;
-    if (step) { g.fillStyle = muted; g.fillText(DSP.noteName(m), 4, Y(m)) }
+  const grid = (v, lbl) => { g.strokeStyle = line; g.lineWidth = 1; g.beginPath(); g.moveTo(padL, Y(v) + .5); g.lineTo(w - padR, Y(v) + .5); g.stroke(); g.fillStyle = muted; g.fillText(lbl, 4, Y(v)) };
+  if (o.mode === 'pitch') {
+    const ticks = HZ_TICKS.filter(f => { const m = DSP.hzToMidi(f); return m > o.lo && m < o.hi });
+    const step = ticks.length > 9 ? 2 : 1;
+    ticks.forEach((f, i) => { if (i % step === 0) grid(DSP.hzToMidi(f), f + ' Hz') });
+  } else {
+    for (let v = -60; v <= 0; v += 10) if (v > o.lo && v < o.hi) grid(v, v + ' dB');
+    if (o.thr != null) { g.strokeStyle = muted; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(padL, Y(o.thr)); g.lineTo(w - padR, Y(o.thr)); g.stroke(); g.setLineDash([]) }
   }
-  // asse tempo
-  g.fillStyle = muted; g.textBaseline = 'alphabetic';
-  const span = opts.t1 - opts.t0, stepT = span > 12 ? 4 : span > 5 ? 2 : 1;
-  for (let s = Math.ceil(opts.t0 / stepT) * stepT; s <= opts.t1; s += stepT) {
-    const lbl = opts.rel ? (s - opts.t0).toFixed(0) + ' s' : '';
-    if (lbl) g.fillText(lbl, X(s) - 8, h - 4);
-  }
-  if (opts.guide) {
-    g.strokeStyle = css('--accent'); g.globalAlpha = .9; g.lineWidth = opts.band ? 1 : 2; g.setLineDash([6, 5]);
-    g.beginPath(); let started = false;
-    for (let t = opts.t0; t <= opts.t1; t += span / 120) {
-      const m = opts.guide(t); if (m == null) { started = false; continue }
-      if (!started) { g.moveTo(X(t), Y(m)); started = true } else g.lineTo(X(t), Y(m));
-    }
-    g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
-    if (opts.band) {
-      const m = opts.guide(opts.t1); if (m != null) { g.fillStyle = css('--accent'); g.globalAlpha = .12; g.fillRect(padL, Y(m + .25), w - padL - padR, Y(m - .25) - Y(m + .25)); g.globalAlpha = 1 }
-    }
+  if (o.rel) {
+    g.fillStyle = muted; g.textBaseline = 'alphabetic';
+    const span = o.t1 - o.t0, st = span > 24 ? 10 : span > 12 ? 4 : span > 5 ? 2 : 1;
+    for (let s = 0; s <= span; s += st) g.fillText(s + ' s', X(o.t0 + s) - 8, h - 4);
   }
   g.lineWidth = 3; g.lineCap = 'round';
   for (let i = 1; i < pts.length; i++) {
     const p = pts[i - 1], q = pts[i];
-    if (p[1] == null || q[1] == null || q[0] < opts.t0 || Math.abs(q[1] - p[1]) > 2) continue;
-    g.strokeStyle = hnrColor(q[2]);
-    g.beginPath(); g.moveTo(X(p[0]), Y(p[1])); g.lineTo(X(q[0]), Y(q[1])); g.stroke();
+    if (p[1] == null || q[1] == null || q[0] < o.t0 || q[0] - p[0] > 0.2) continue;
+    if (o.mode === 'pitch') { if (Math.abs(q[1] - p[1]) > 2) continue; g.strokeStyle = hnrColor(q[2]) }
+    else g.strokeStyle = q[2] ? css('--accent') : muted;
+    g.beginPath(); g.moveTo(X(p[0]), Y(Math.max(o.lo, Math.min(o.hi, p[1])))); g.lineTo(X(q[0]), Y(Math.max(o.lo, Math.min(o.hi, q[1])))); g.stroke();
   }
+}
+function setLegend(mode) {
+  $('#legend').innerHTML = mode === 'pitch'
+    ? '<span><i style="background:var(--good)"></i>voce armonica (HNR ≥ 20 dB)</span><span><i style="background:var(--warn)"></i>rumore moderato</span><span><i style="background:var(--bad)"></i>rumorosa o irregolare</span>'
+    : '<span><i style="background:var(--accent)"></i>suono sonoro (corde in vibrazione)</span><span><i style="background:var(--muted)"></i>soffio o rumore</span><span>– – soglia del silenzio</span>';
 }
 
 // ---------- sessione ----------
-const session = { key: null, state: 'idle', onFrame: null };
-let rolling = [];
-function guideFor(key, t0) {
-  const ex = EX[key]; if (!ex) return null;
-  const L = settings.low, H = settings.high;
-  if (ex.target) return () => settings.target;
-  if (ex.kind === 'gliss') { const d = 4; return t => { const u = (t - t0) / d; if (u < 0 || u > 1.05) return null; const k = Math.min(1, u); return ex.dir > 0 ? L + (H - L) * k : H - (H - L) * k } }
-  if (ex.kind === 'siren') { const d = 7; return t => { const u = (t - t0) / d; if (u < 0 || u > 1) return null; return L + (H - L) * (u < .5 ? u * 2 : 2 - u * 2) } }
-  return null;
-}
+const session = { key: null, state: 'idle', onFrame: null, phase: 0, review: null, done: false, floor: null };
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function beep(f = 880, d = .09) { if (!engine.ctx) return; const c = engine.ctx, o = c.createOscillator(), g = c.createGain(); o.frequency.value = f; g.gain.value = .12; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + d) }
 
 function openSession(key) {
-  session.key = key; session.state = 'idle'; session.done = false; session.review = null;
-  const ex = EX[key];
-  showView('sessione');
+  abortRun();
+  Object.assign(session, { key, state: 'idle', done: false, review: null, phase: 0 });
+  showView('sessione'); setLegend(EX[key].plot);
   $('#btnBack').textContent = key === 'free' ? '← Esercizi' : '← Tutti gli esercizi';
-  $('#exResult').hidden = true;
-  $('#legTarget').hidden = !(ex.target || ex.kind === 'gliss' || ex.kind === 'siren');
-  renderInfo();
-  engine.start().then(ok => { if (ok) { startLive(); if (key === 'free') setChips([{ text: 'In ascolto', tone: '' }]) } });
+  $('#exResult').hidden = true; renderInfo();
+  engine.start().then(ok => { if (ok) { startLive(); setChips([{ text: 'In ascolto' }]) } });
 }
-function renderInfo(extra) {
+function renderInfo() {
   const ex = EX[session.key];
   if (session.key === 'free') {
-    $('#exInfo').innerHTML = `<h2>Ascolto libero</h2><p class="muted" style="margin-top:6px">Vocalizza come vuoi: nota, intonazione, intensità e qualità si aggiornano mentre canti. I valori di jitter e shimmer sono affidabili solo su note tenute.</p>`;
+    $('#exInfo').innerHTML = '<h2>Ascolto libero</h2><p class="muted" style="margin-top:6px">Parla o vocalizza liberamente: altezza, intensità e qualità della voce si aggiornano mentre emetti il suono. Jitter e shimmer sono attendibili solo sulle vocali tenute.</p>';
     return;
   }
-  const tgt = ex.target ? `<p style="margin-top:8px">Nota target: <b class="mono">${DSP.noteName(settings.target)} · ${fmt(DSP.midiToHz(settings.target), 0)} Hz</b></p>` : '';
-  const rng = (ex.kind === 'gliss' || ex.kind === 'siren') ? `<p style="margin-top:8px">Estensione: <b class="mono">${DSP.noteName(settings.low)} → ${DSP.noteName(settings.high)}</b></p>` : '';
-  const recording = session.state === 'rec' || session.state === 'count';
-  $('#exInfo').innerHTML = `<div class="label">${ex.kind === 'sustain' ? (ex.target ? 'Intonazione' : 'Vocale sostenuta') : 'Agilità'}</div>
-    <h2 style="margin-top:2px">${ex.name}</h2>${tgt}${rng}
-    <ol class="steps" style="margin-top:10px">${ex.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+  const busy = session.state === 'rec' || session.state === 'count';
+  const ph = ex.phases ? ex.phases[session.phase] : null;
+  const steps = ph ? ph.steps : ex.steps;
+  const phaseBar = ex.phases ? `<div class="phase">${ex.phases.map((p, i) => `<span class="${i === session.phase ? 'on' : i < session.phase ? 'done' : ''}">${i + 1}. ${p.tag}</span>`).join('')}</div>` : '';
+  const kindLabel = { sustain: 'Vocale sostenuta', sz: 'Valutazione', speech: 'Valutazione', onset: 'Terapia', mdv: 'Terapia', sovt: 'Terapia', gliss: 'Terapia', siren: 'Terapia' }[ex.kind];
+  $('#exInfo').innerHTML = `<div class="label">${kindLabel}</div><h2 style="margin-top:2px">${ex.name}</h2>${phaseBar}
+    <ol class="steps" style="margin-top:10px">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${ex.text ? `<div class="readtext">${ex.text}</div>` : ''}
+    ${ex.kind === 'onset' && session.state === 'rec' ? `<p style="margin-top:10px">Ripetizioni: <b class="mono" id="reps">0</b> / 5</p>` : ''}
     <div class="btnrow" style="margin-top:14px;align-items:center">
-      ${recording ? `<button class="btn stop big" id="btnStop">Stop</button><span class="timer" id="timer">0,0 s</span>`
-        : `<button class="btn primary big" id="btnStart">${session.done ? 'Ripeti' : 'Inizia'}</button>${ex.target ? '<button class="btn" id="btnTone">Ascolta la nota</button>' : ''}`}
+      ${busy ? `<button class="btn stop big" id="btnStop">${ex.phases && session.phase < ex.phases.length - 1 ? 'Fine fase' : 'Stop'}</button><span class="timer" id="timer">0,0 s</span>`
+        : `<button class="btn primary big" id="btnStart">${session.done ? 'Ripeti' : 'Inizia'}</button>`}
     </div>`;
-  $('#btnStart') && ($('#btnStart').onclick = startExercise);
-  $('#btnStop') && ($('#btnStop').onclick = () => finishExercise());
-  $('#btnTone') && ($('#btnTone').onclick = () => playTone(settings.target, 1.6));
+  $('#btnStart') && ($('#btnStart').onclick = runExercise);
+  $('#btnStop') && ($('#btnStop').onclick = () => { if (session.state === 'rec') endTake(); else { abortRun(); renderInfo() } });
 }
-$('#btnBack').onclick = () => { stopRec(); session.key = null; showView('esercizi'); renderGrid() };
+$('#btnBack').onclick = () => { abortRun(); session.key = null; showView('esercizi'); renderGrid() };
 
-function playTone(midi, dur) {
-  if (!engine.ctx) return Promise.resolve();
-  const c = engine.ctx, o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(), g2 = c.createGain();
-  o.type = 'triangle'; o.frequency.value = DSP.midiToHz(midi); o2.frequency.value = DSP.midiToHz(midi) * 2; g2.gain.value = .25;
-  const t = c.currentTime;
-  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .05); g.gain.setValueAtTime(.22, t + dur - .15); g.gain.linearRampToValueAtTime(0, t + dur);
-  o.connect(g); o2.connect(g2); g2.connect(g); g.connect(c.destination);
-  o.start(t); o2.start(t); o.stop(t + dur); o2.stop(t + dur);
-  return new Promise(r => setTimeout(r, dur * 1000 + 150));
+function abortRun() {
+  if (session.state === 'rec' || session.state === 'count') { session.state = 'idle'; session.resolve?.(null) }
+  engine.rec = null; session.onFrame = null; $('#countdown').hidden = true;
 }
-function beep(f = 880, d = .09) {
-  if (!engine.ctx) return; const c = engine.ctx, o = c.createOscillator(), g = c.createGain();
-  o.frequency.value = f; g.gain.value = .12; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + d);
-}
-
-async function startExercise() {
-  const ok = await engine.start(); if (!ok) return;
-  const ex = EX[session.key];
-  session.state = 'count'; session.done = false; $('#exResult').hidden = true; renderInfo();
-  if (ex.target) await playTone(settings.target, 1.6);
-  const cd = $('#countdown'); cd.hidden = false;
-  for (const n of [3, 2, 1]) { if (session.state !== 'count') { cd.hidden = true; return } cd.textContent = n; beep(n === 1 ? 1320 : 880); await new Promise(r => setTimeout(r, 700)) }
-  cd.hidden = true;
-  if (session.state !== 'count') return;
-  session.state = 'rec'; renderInfo();
-  engine.rec = []; session.t0 = engine.t; session.voicedSeen = 0; session.silence = 0;
-  session.guide = guideFor(session.key, engine.t);
-  session.onFrame = f => {
-    const el = $('#timer'); const t = engine.t - session.t0;
-    if (el) el.textContent = fmt(t, 1) + ' s';
-    if (f.voiced) { session.voicedSeen += 2048 / engine.sr; session.silence = 0 } else session.silence += 2048 / engine.sr;
-    const stopAfter = ex.stopAfter;
-    if (stopAfter && session.voicedSeen >= stopAfter) return finishExercise();
-    if (session.voicedSeen > 1 && session.silence > 0.7) return finishExercise();
-    if (t > ex.max) return finishExercise();
-    if (!session.voicedSeen && t > 6) return finishExercise();
-  };
-}
-function stopRec() { engine.rec = null; session.onFrame = null; session.guide = null; if (session.state === 'count') session.state = 'idle' }
-function finishExercise() {
+function endTake() {
   if (session.state !== 'rec') return;
-  session.state = 'busy'; session.onFrame = null;
-  const chunks = engine.rec || []; engine.rec = null;
-  const x = concat(chunks), sr = engine.sr;
+  const x = engine.rec ? concat(engine.rec) : new Float32Array(0);
+  engine.rec = null; session.onFrame = null; session.state = 'between';
+  session.resolve?.(x);
+}
+function concat(ch) { let n = 0; for (const c of ch) n += c.length; const o = new Float32Array(n); let p = 0; for (const c of ch) { o.set(c, p); p += c.length } return o }
+
+async function runExercise() {
+  const ok = await engine.start(); if (!ok) return;
+  const ex = EX[session.key], phases = ex.phases || [null], takes = [];
+  session.done = false; session.review = null; $('#exResult').hidden = true;
+  for (let i = 0; i < phases.length; i++) {
+    session.phase = i; session.state = 'count'; renderInfo();
+    const cd = $('#countdown'), dbs = [];
+    session.onFrame = f => dbs.push(f.db);
+    if (i > 0) { cd.hidden = false; cd.textContent = 'Fase ' + (i + 1); await wait(1500) }
+    for (const n of [3, 2, 1]) {
+      if (session.state !== 'count') return;
+      cd.hidden = false; cd.textContent = n; beep(n === 1 ? 1320 : 880); await wait(700);
+    }
+    cd.hidden = true; if (session.state !== 'count') return;
+    if (i === 0) session.floor = median(dbs.slice(-20)) ?? -65;
+    const thr = Math.max(session.floor + 10, -56);
+    session.state = 'rec'; renderInfo();
+    engine.rec = []; const t0 = engine.t; session.t0 = t0;
+    let active = 0, sil = 0, reps = 0, wasOn = false, onFor = 0;
+    const x = await new Promise(resolve => {
+      session.resolve = resolve;
+      session.onFrame = (f, dt) => {
+        const t = engine.t - t0; const el = $('#timer'); if (el) el.textContent = fmt(t, 1) + ' s';
+        const on = ex.stop.by === 'voiced' ? f.voiced : f.db > thr;
+        if (on) { active += dt; sil = 0; onFor += dt } else { sil += dt; if (wasOn && onFor > 0.15) { reps++; const r = $('#reps'); if (r) r.textContent = reps } onFor = 0 }
+        wasOn = on;
+        if (ex.stop.reps ? (reps >= ex.stop.reps && sil > ex.stop.sil) : (active > ex.stop.min && sil > ex.stop.sil)) return endTake();
+        if (t > ex.max || (!active && t > 8)) return endTake();
+      };
+    });
+    if (!x) return;
+    takes.push(x);
+  }
+  session.state = 'busy';
   $('#exResult').hidden = false; $('#exResult').innerHTML = '<p class="muted">Analisi in corso…</p>';
-  setTimeout(() => {
-    const m = analyzeTake(x, sr, session.key);
-    session.state = 'idle'; session.done = true; session.guide = null;
-    renderInfo(); showResult(m, session.key, true);
-  }, 30);
+  await wait(30);
+  const m = analyze(session.key, takes, engine.sr, session.floor);
+  session.state = 'idle'; session.done = true; renderInfo(); showResult(m, session.key, true);
+}
+
+function analyze(key, takes, sr, floor) {
+  const ex = EX[key]; let m, fr;
+  try {
+    if (ex.kind === 'sz') {
+      m = AN.sz(takes[0], takes[1], sr, floor);
+      if (!m.error) { const [a, b] = m.fr, off = a.length ? a[a.length - 1].t + 0.6 : 0; fr = a.concat(b.map(f => Object.assign({}, f, { t: f.t + off }))); delete m.fr }
+    } else {
+      const x = takes[0]; fr = AN.frames(x, sr);
+      m = ex.kind === 'sustain' ? AN.sustain(x, sr, fr)
+        : ex.kind === 'speech' ? AN.speech(x, sr, fr, floor)
+        : ex.kind === 'gliss' || ex.kind === 'siren' ? AN.glide(x, sr, fr, ex.kind, ex.dir)
+        : ex.kind === 'onset' ? AN.onset(x, sr, fr, floor)
+        : ex.kind === 'mdv' ? AN.mdv(x, sr, fr)
+        : AN.sovt(x, sr, fr, floor);
+    }
+  } catch (e) { return { error: 'Analisi non riuscita: riprova con un suono più lungo e più vicino al microfono.' } }
+  if (!m.error && fr) {
+    m.kind = ex.kind;
+    m.plot = ex.plot === 'pitch' ? { mode: 'pitch', pts: fr.map(f => [f.t, f.voiced ? f.midi : null, f.hnr]) }
+      : { mode: 'level', pts: fr.map(f => [f.t, f.db, f.voiced ? 1 : 0]), thr: AN.threshold(fr, floor) };
+  }
+  return m;
 }
 
 // ---------- esito ----------
-function status(v, good, bad, higherBetter) {
-  if (v == null || isNaN(v)) return '';
-  if (higherBetter) return v >= good ? 'good' : v >= bad ? 'warn' : 'bad';
-  return v <= good ? 'good' : v <= bad ? 'warn' : 'bad';
-}
-const R = DSP.REF;
-function metricRows(m) {
-  const rows = [];
-  rows.push(['Nota media', m.f0 ? `${DSP.noteName(m.midi)} · ${fmt(m.f0, 0)} Hz` : '—', '', '']);
-  if (m.kind === 'sustain') {
-    rows.push(['Tempo di fonazione', fmt(m.mpt, 1) + ' s', '≥ 10 s', status(m.mpt, 10, 6, true)]);
-    rows.push(['Stabilità del tono', fmt(m.sdCents, 0) + ' cent', '≤ 20', status(m.sdCents, R.sdCents.ok, R.sdCents.bad)]);
-    if (m.targetCents != null) rows.push(['Scarto dal target', (m.targetCents > 0 ? '+' : '') + fmt(m.targetCents, 0) + ' cent', '± 25', status(Math.abs(m.targetCents), 25, 50)]);
-    rows.push(['Jitter locale', fmt(m.jitter, 2) + ' %', '< 1,04', status(m.jitter, R.jitter.ok, R.jitter.bad)]);
-    rows.push(['Shimmer locale', fmt(m.shimmer, 2) + ' %', '< 3,81', status(m.shimmer, R.shimmer.ok, R.shimmer.bad)]);
-  } else {
-    rows.push(['Estensione', `${fmt(m.rangeSt, 1)} st (${DSP.noteName(m.lowMidi)}–${DSP.noteName(m.highMidi)})`, '≥ 12 st', status(m.rangeSt, 12, 7, true)]);
-    rows.push(['Fluidità', fmt(100 * m.smooth, 0) + ' %', '≥ 90', status(100 * m.smooth, 90, 60, true)]);
-    rows.push(['Interruzioni', String(m.breaks), '0', m.breaks ? 'warn' : 'good']);
+function st(v, good, bad, higher) { if (v == null || !isFinite(v)) return ''; return higher ? (v >= good ? 'good' : v >= bad ? 'warn' : 'bad') : (v <= good ? 'good' : v <= bad ? 'warn' : 'bad') }
+const QROWS = m => [
+  ['HNR (armoniche/rumore)', fmt(m.hnr, 1) + ' dB', '≥ 20', st(m.hnr, R.hnr.ok, R.hnr.bad, true)],
+  ['CPP (periodicità)', fmt(m.cpp, 1) + ' dB', '≥ ' + R.cpp.ok, st(m.cpp, R.cpp.ok, R.cpp.bad, true)]
+];
+function rows(m) {
+  const f0 = ['Altezza media (F0)', m.f0 ? fmt(m.f0, 0) + ' Hz' : '—', '', ''];
+  switch (m.kind) {
+    case 'sustain': return [f0,
+      ['Tempo massimo di fonazione', fmt(m.mpt, 1) + ' s', '≥ 15 s', st(m.mpt, 15, 10, true)],
+      ['Stabilità del tono', fmt(m.sdCents, 0) + ' cent', '≤ 20', st(m.sdCents, R.sdCents.ok, R.sdCents.bad)],
+      ['Jitter', fmt(m.jitter, 2) + ' %', '< 1,04', st(m.jitter, R.jitter.ok, R.jitter.bad)],
+      ['Shimmer', fmt(m.shimmer, 2) + ' %', '< 3,81', st(m.shimmer, R.shimmer.ok, R.shimmer.bad)],
+      ...QROWS(m),
+      ['H1–H2 (soffio / tensione)', fmt(m.h1h2, 1) + ' dB', '−4 … +6', m.h1h2 == null ? '' : m.h1h2 > 6 || m.h1h2 < -4 ? 'warn' : 'good'],
+      ['Intensità', fmt(m.db, 0) + ' dBFS', '−48 … −6', st(Math.abs(m.db + 27), 21, 30)]];
+    case 'speech': return [f0,
+      ['Variazione dell\'intonazione', fmt(m.rangeSt, 1) + ' semitoni', '≥ 3', st(m.rangeSt, 3, 2, true)],
+      ['Tempo con voce', fmt(m.talk, 1) + ' s', '', ''],
+      ['HNR nel parlato', fmt(m.hnr, 1) + ' dB', '≥ 12', st(m.hnr, 12, 4, true)],
+      ['CPP nel parlato', fmt(m.cpp, 1) + ' dB', '≥ ' + (R.cpp.ok - 3), st(m.cpp, R.cpp.ok - 3, R.cpp.bad - 3, true)],
+      ['Intensità', fmt(m.db, 0) + ' dBFS', '−48 … −6', st(Math.abs(m.db + 27), 21, 30)]];
+    case 'sz': return [
+      ['Durata della S', fmt(m.sDur, 1) + ' s', '≥ 15 s', st(m.sDur, 15, 10, true)],
+      ['Durata della Z', fmt(m.zDur, 1) + ' s', '≥ 15 s', st(m.zDur, 15, 10, true)],
+      ['Rapporto s/z', fmt(m.szRatio, 2), '≤ 1,2', st(m.szRatio, 1.2, 1.4)],
+      ['Z sonora per tutta la durata', fmt(100 * m.zVoiced, 0) + ' %', '≥ 80', st(100 * m.zVoiced, 80, 60, true)]];
+    case 'onset': return [
+      ['Attacchi morbidi', `${m.soft} su ${m.reps}`, 'tutti', st(m.softPct, 80, 50, true)],
+      ['Tempo di salita (mediana)', fmt(m.riseMs, 0) + ' ms', '30–150', st(Math.abs((m.riseMs ?? 0) - 80), 50, 60)],
+      f0, ...QROWS(m)];
+    case 'mdv': return [
+      ['Escursione di intensità', fmt(m.dynRange, 1) + ' dB', '≥ 15', st(m.dynRange, 15, 10, true)],
+      ['Variazione del tono col volume', (m.pitchRise > 0 ? '+' : '') + fmt(m.pitchRise, 0) + ' cent', '≤ 100', st(Math.abs(m.pitchRise), 100, 200)],
+      ['Continuità', fmt(100 * m.smooth, 0) + ' %', '≥ 90', st(100 * m.smooth, 90, 70, true)],
+      ['Durata', fmt(m.dur, 1) + ' s', '', ''], ...QROWS(m)];
+    case 'sovt': return [
+      ['Durata', fmt(m.dur, 1) + ' s', '≥ 15 s', st(m.dur, 15, 8, true)],
+      ['Regolarità del flusso', '± ' + fmt(m.levelSd, 1) + ' dB', '≤ 2', st(m.levelSd, 2, 4)],
+      ['Interruzioni', String(m.breaks), '0', m.breaks ? 'warn' : 'good'],
+      ['Voce attiva', fmt(m.voicedPct, 0) + ' %', '', ''], f0];
+    default: return [
+      ['Fluidità', fmt(100 * m.smooth, 0) + ' %', '≥ 90', st(100 * m.smooth, 90, 60, true)],
+      ['Interruzioni', String(m.breaks), '0', m.breaks ? 'warn' : 'good'],
+      ['Escursione comoda', `${fmt(m.lowHz, 0)}–${fmt(m.highHz, 0)} Hz`, 'informativa', ''], ...QROWS(m)];
   }
-  rows.push(['HNR', fmt(m.hnr, 1) + ' dB', '≥ 20', status(m.hnr, R.hnr.ok, R.hnr.bad, true)]);
-  rows.push(['CPP', fmt(m.cpp, 1) + ' dB', '≥ ' + R.cpp.ok, status(m.cpp, R.cpp.ok, R.cpp.bad, true)]);
-  rows.push(['H1–H2', fmt(m.h1h2, 1) + ' dB', '−4 … +6', m.h1h2 == null ? '' : m.h1h2 > 6 || m.h1h2 < -4 ? 'warn' : 'good']);
-  rows.push(['Intensità', fmt(m.db, 0) + ' dBFS', '−48 … −6', status(Math.abs(m.db + 27), 21, 30)]);
-  return rows;
 }
 const TIPS = {
-  breathy: 'Il suono porta con sé molta aria: prova a "chiudere" il suono partendo da una "m" a bocca chiusa (mmm-A) e cerca un attacco morbido ma netto.',
-  hoarse: 'Leggera irregolarità: bevi un sorso d\'acqua, abbassa un po\' il volume e ripeti su una nota più comoda.',
-  hoarse2: 'Irregolarità e rumore evidenti: riduci intensità e durata degli esercizi, idrata e riposa la voce. Se persiste da settimane, parlane con il foniatra.',
-  tense: 'Le armoniche acute dominano e il volume è alto: rilascia mandibola e spalle, abbassa un poco il volume, prova lo stesso esercizio con la vibrazione delle labbra.',
-  unstable: 'Il tono oscilla: appoggia il fiato in modo costante (immagina di espirare lentamente in una cannuccia) e scegli una nota più comoda.',
-  short: 'Fonazione sotto gli 8 secondi: lavora sull\'inspirazione profonda e sulla gestione del fiato prima di aumentare la durata.',
-  breaks: 'Ci sono salti o interruzioni: rallenta il glissato e prova con la "U" o con le labbra che vibrano, che stabilizzano il passaggio di registro.',
-  range: 'Escursione limitata: allarga gradualmente di un semitono alla volta le note grave e acuta nelle impostazioni.',
-  low: 'Volume molto basso: avvicinati al microfono o aumenta leggermente l\'intensità.',
-  high: 'Volume molto alto o microfono troppo vicino: allontanati e riduci la spinta.',
-  off: 'La nota emessa è lontana dal target: riascolta la nota di riferimento prima di partire.',
-  dir: 'Il percorso del pitch non segue la direzione richiesta: segui la linea guida tratteggiata.',
-  clean: 'Emissione regolare e armonica. Mantieni queste condizioni e prova ad allungare la durata o ad allargare l\'estensione.'
+  clean: 'Emissione regolare e armonica. Mantieni queste condizioni e cura la costanza giorno per giorno.',
+  breathy: 'Il suono porta con sé molta aria: parti da una "m" a labbra chiuse (mmm-a) e cerca una chiusura più piena, senza spingere.',
+  hoarse: 'Leggera irregolarità: bevi un sorso d\'acqua, abbassa un po\' il volume e ripeti alla tua altezza naturale.',
+  hoarse2: 'Irregolarità evidente: riduci durata e intensità degli esercizi, idrata e riposa la voce. Segnalalo al logopedista.',
+  tense: 'Prevalgono le armoniche acute e il volume è alto: rilascia mandibola, lingua e spalle; alterna con la cannuccia.',
+  unstable: 'Il tono oscilla: espira in modo uniforme, come in una cannuccia, e scegli un\'altezza più comoda.',
+  short: 'Durata breve: lavora sull\'inspirazione costo-diaframmatica e sulla gestione dell\'aria prima di allungare.',
+  mono: 'Il parlato è piatto: prova a leggere dando più movimento all\'intonazione, come se raccontassi a qualcuno.',
+  szok: 'La chiusura delle corde vocali sembra efficiente: S e Z durano in modo simile.',
+  szmid: 'La Z dura un po\' meno della S: ripeti la prova in un altro momento per confermare.',
+  szhigh: 'La Z dura molto meno della S: può indicare una chiusura incompleta delle corde. Riportalo al logopedista.',
+  szlow: 'La S è più corta della Z: di solito dipende da come gestisci il soffio, non dalle corde. Riprova con calma.',
+  breath: 'Entrambe le durate sono brevi: il limite è il fiato. Lavora sull\'inspirazione profonda.',
+  sv: 'La S sembra sonora: deve essere solo soffio, senza voce.',
+  zu: 'La Z perde la vibrazione: mantienila sonora fino alla fine, anche a costo di accorciarla.',
+  soft: 'L\'obiettivo è che ogni vocale nasca piano e cresca in poco tempo, senza colpo e senza soffio prima.',
+  hard: 'Alcuni attacchi sono secchi (colpo di glottide): immagina una "h" leggerissima prima della "a".',
+  bron: 'In alcuni attacchi esce aria prima della voce: avvicina l\'inizio del suono all\'inizio del fiato.',
+  few: 'Servono 5 ripetizioni con pause chiare tra una e l\'altra.',
+  mdvok: 'Crescendo e diminuendo regolari: prova ad allungare la durata totale.',
+  dyn: 'La differenza tra piano e forte è poca: allarga gradualmente senza forzare il forte.',
+  shape: 'Il volume non torna al piano: dividi il fiato a metà tra crescendo e diminuendo.',
+  prise: 'Quando aumenti il volume sale anche il tono: mantieni la stessa nota, sostenendo con il fiato e non con la gola.',
+  jerk: 'Il volume cambia a scatti: rallenta il crescendo.',
+  flow: 'Flusso stabile: buon controllo del fiato. Puoi allungare la durata.',
+  unflow: 'Il flusso varia: espira in modo più uniforme, senza spinte.',
+  breaks: 'Ci sono interruzioni: rallenta e mantieni il suono acceso; la cannuccia o le labbra aiutano a non spezzare.',
+  dir: 'Il percorso non segue la direzione richiesta: guarda il grafico mentre esegui.',
+  low: 'Volume molto basso: avvicinati al microfono.',
+  high: 'Volume molto alto o microfono troppo vicino: allontanati e riduci la spinta.'
 };
-function ringSvg(score) {
+function ring(score) {
   const s = score ?? 0, C = 2 * Math.PI * 40, col = s >= 75 ? 'var(--good)' : s >= 50 ? 'var(--warn)' : 'var(--bad)';
-  return `<svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--sunk)" stroke-width="10"/>
-    <circle cx="50" cy="50" r="40" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * s / 100} ${C}" transform="rotate(-90 50 50)"/>
-    <text x="50" y="55" text-anchor="middle" font-size="26" fill="var(--ink)">${score ?? '—'}</text><text x="50" y="72" text-anchor="middle" font-size="9" fill="var(--muted)">/100</text></svg>`;
+  return `<svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--sunk)" stroke-width="10"/><circle cx="50" cy="50" r="40" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * s / 100} ${C}" transform="rotate(-90 50 50)"/><text x="50" y="55" text-anchor="middle" font-size="26" fill="var(--ink)">${score ?? '—'}</text><text x="50" y="72" text-anchor="middle" font-size="9" fill="var(--muted)">/100</text></svg>`;
 }
+const KEEP = ['f0', 'mpt', 'sdCents', 'jitter', 'shimmer', 'hnr', 'cpp', 'h1h2', 'db', 'rangeSt', 'smooth', 'breaks', 'szRatio', 'sDur', 'zDur', 'softPct', 'riseMs', 'dynRange', 'pitchRise', 'levelSd', 'dur', 'talk'];
 function showResult(m, key, save) {
   const box = $('#exResult'); box.hidden = false;
-  if (m.error) { box.innerHTML = `<h3>Nessuna misura</h3><p class="muted">${m.error}</p>`; return }
-  const quality = m.score >= 75 ? 'Buona qualità vocale' : m.score >= 50 ? 'Qualità discreta' : 'Qualità da migliorare';
+  if (m.error) { box.innerHTML = `<h3>Nessuna misura</h3><p class="muted" style="margin-top:6px">${m.error}</p>`; return }
+  const q = m.score >= 75 ? 'Buon risultato' : m.score >= 50 ? 'Risultato discreto' : 'Da migliorare';
   const tips = [...new Set(m.labels.map(l => l.key))].filter(k => TIPS[k]).slice(0, 3).map(k => `<li>${TIPS[k]}</li>`).join('');
-  box.innerHTML = `<div class="scorebox">${ringSvg(m.score)}<div><div class="label">Punteggio qualità vocale</div><h2>${quality}</h2><p class="muted" style="font-size:.86rem">${EX[key]?.name ?? 'Registrazione'} · ${new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</p></div></div>
-    <div class="chips">${m.labels.map(l => `<span class="chip ${l.tone}">${l.text}</span>`).join('')}</div>
-    <table class="mt">${metricRows(m).map(r => `<tr><td><span class="dot ${r[3]}"></span>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
+  const ons = m.onsets ? `<div><div class="label" style="margin-bottom:6px">Le tue ripetizioni</div><div class="onsets">${m.onsets.map((o, i) => `<span class="${o.type === 'morbido' ? 'good' : 'warn'}">${i + 1}. ${o.type}</span>`).join('')}</div></div>` : '';
+  box.innerHTML = `<div class="scorebox">${ring(m.score)}<div><div class="label">Punteggio</div><h2>${q}</h2><p class="muted" style="font-size:.86rem">${exName(key)} · ${new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</p></div></div>
+    <div class="chips">${m.labels.map(l => `<span class="chip ${l.tone}">${l.text}</span>`).join('')}</div>${ons}
+    <table class="mt">${rows(m).map(r => `<tr><td><span class="dot ${r[3]}"></span>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
     <div><div class="label" style="margin-bottom:4px">Cosa fare</div><ul class="tips">${tips}</ul></div>`;
-  // ridisegna il grafico con la ripresa completa
-  const pts = m.frames, t0 = pts[0]?.[0] ?? 0, t1 = pts[pts.length - 1]?.[0] ?? 1;
-  session.review = { pts, t0, t1, guide: guideFor(key, t0) };
+  if (m.plot) { const p = m.plot.pts; session.review = Object.assign({}, m.plot, { t0: p[0]?.[0] ?? 0, t1: p[p.length - 1]?.[0] ?? 1 }) }
   if (save) {
-    const rec = { id: Date.now().toString(36), date: new Date().toISOString(), ex: key, score: m.score,
-      m: pick(m, ['mpt', 'f0', 'sdCents', 'targetCents', 'jitter', 'shimmer', 'hnr', 'cpp', 'h1h2', 'alpha', 'db', 'rangeSt', 'breaks', 'smooth']),
-      labels: m.labels.map(l => l.text) };
+    const rec = { id: Date.now().toString(36), date: new Date().toISOString(), ex: key, score: m.score, m: {}, labels: m.labels.map(l => l.text) };
+    for (const k of KEEP) if (m[k] != null && isFinite(m[k])) rec.m[k] = +(+m[k]).toFixed(3);
     history.push(rec); store.set('history', history);
   }
 }
-function pick(o, ks) { const r = {}; for (const k of ks) if (o[k] != null && isFinite(o[k])) r[k] = +(+o[k]).toFixed(3); return r }
 
-// ---------- ciclo di disegno live ----------
+// ---------- ciclo live ----------
 let raf = 0, lastLabel = 0;
-function startLive() {
-  cancelAnimationFrame(raf);
-  const loop = () => { raf = requestAnimationFrame(loop); drawLive() };
-  loop();
-}
+function startLive() { cancelAnimationFrame(raf); const loop = () => { raf = requestAnimationFrame(loop); drawLive() }; loop() }
 function setChips(list) { $('#liveChips').innerHTML = list.map(l => `<span class="chip ${l.tone || ''}">${l.text}</span>`).join('') }
+function pitchRange(mids) {
+  const c = DSP.hzToMidi(centerHz()); let lo = c - 12, hi = c + 12;
+  if (mids.length) { lo = Math.min(lo, Math.min(...mids) - 2); hi = Math.max(hi, Math.max(...mids) + 2) }
+  return [lo, hi];
+}
 function drawLive() {
   if ($('#v-sessione').hidden) return;
-  const fr = engine.frames, last = fr[fr.length - 1];
-  const cv = $('#plot');
-  if (session.review && session.state === 'idle' && session.done) {
+  const ex = EX[session.key] || EX.free, cv = $('#plot'), fr = engine.frames, last = fr[fr.length - 1];
+  if (session.review && session.done && session.state === 'idle') {
     const r = session.review;
-    const mids = r.pts.map(p => p[1]).filter(v => v != null);
-    let lo = Math.min(settings.low, ...mids) - 2, hi = Math.max(settings.high, ...mids) + 2;
-    if (!EX[session.key]?.target && EX[session.key]?.kind === 'sustain') { const md = median(mids) ?? 57; lo = md - 6; hi = md + 6 }
-    drawPitch(cv, r.pts, { t0: r.t0, t1: r.t1 + .2, lo, hi, guide: r.guide, band: EX[session.key]?.target, rel: true });
+    if (r.mode === 'pitch') { const [lo, hi] = pitchRange(r.pts.map(p => p[1]).filter(v => v != null)); drawPlot(cv, r.pts, { mode: 'pitch', t0: r.t0, t1: r.t1 + .2, lo, hi, rel: true }) }
+    else drawPlot(cv, r.pts, { mode: 'level', t0: r.t0, t1: r.t1 + .2, lo: -65, hi: 0, thr: r.thr, rel: true });
   } else {
-    const now = engine.t, t0 = now - 8;
-    const pts = fr.filter(f => f.t >= t0 - .1).map(f => [f.t, f.voiced ? f.midi : null, f.hnr]);
-    const ex = EX[session.key] || {};
-    let lo = settings.low - 4, hi = settings.high + 4;
-    if (ex.kind === 'sustain' || ex.kind === 'free') {
-      const mids = pts.map(p => p[1]).filter(v => v != null);
-      const c = ex.target ? settings.target : (mids.length ? median(mids) : (settings.low + settings.high) / 2);
-      if (ex.kind === 'free') { lo = Math.min(settings.low - 4, ...mids.map(v => v - 2)); hi = Math.max(settings.high + 4, ...mids.map(v => v + 2)) }
-      else { lo = c - 7; hi = c + 7 }
+    const now = engine.t, span = ex.plot === 'level' ? 12 : 8, t0 = now - span;
+    if (ex.plot === 'level') {
+      const thr = session.floor != null ? Math.max(session.floor + 10, -56) : null;
+      drawPlot(cv, fr.filter(f => f.t >= t0 - .1).map(f => [f.t, f.db, f.voiced ? 1 : 0]), { mode: 'level', t0, t1: now, lo: -65, hi: 0, thr: session.state === 'rec' ? thr : null });
+    } else {
+      const pts = fr.filter(f => f.t >= t0 - .1).map(f => [f.t, f.voiced ? f.midi : null, f.hnr]);
+      const [lo, hi] = pitchRange(pts.map(p => p[1]).filter(v => v != null));
+      drawPlot(cv, pts, { mode: 'pitch', t0, t1: now, lo, hi });
     }
-    drawPitch(cv, pts, { t0, t1: now, lo, hi, guide: session.guide, band: ex.target });
   }
   if (!last) return;
-  // lettura nota
-  const voiced = last.voiced && last.clarity > .75;
-  const nEl = $('#rNote');
-  if (voiced) {
-    const r = Math.round(last.midi), c = (last.midi - r) * 100;
-    nEl.textContent = DSP.noteName(r); nEl.classList.remove('off');
-    $('#rHz').textContent = fmt(last.f0, 1) + ' Hz';
-    let dev = c, label = 'Intonazione';
-    if (EX[session.key]?.target) { dev = (last.midi - settings.target) * 100; label = 'Scarto dal target ' + DSP.noteName(settings.target) }
-    $('#rCentsLabel').textContent = label + ': ' + (dev > 0 ? '+' : '') + Math.round(dev) + ' cent';
-    $('#rNeedle').style.left = (50 + Math.max(-50, Math.min(50, dev))) + '%';
-  } else { nEl.classList.add('off') }
+  const hzEl = $('#rHz');
+  if (last.voiced) { hzEl.innerHTML = `${fmt(last.f0, 0)}<small>Hz</small>`; hzEl.classList.remove('off'); $('#rNote').textContent = '≈ ' + DSP.noteName(last.midi) }
+  else hzEl.classList.add('off');
   $('#rMeter').style.width = Math.max(0, Math.min(100, (last.db + 60) / 60 * 100)) + '%';
-  // metriche rolling (ultimo secondo)
   const win = fr.filter(f => f.t > engine.t - 1 && f.voiced);
   const lm = { hnr: median(win.map(f => f.hnr)), cpp: median(win.map(f => f.cpp)), db: win.length ? median(win.map(f => f.db)) : last.db,
     jitter: engine.lastPert?.jitter, shimmer: engine.lastPert?.shimmer, h1h2: engine.lastShape?.h1h2, alpha: engine.lastShape?.alpha };
   const mids = win.map(f => f.midi);
   if (mids.length > 8) { const mu = mids.reduce((s, v) => s + v, 0) / mids.length; lm.sd = 100 * Math.sqrt(mids.reduce((s, v) => s + (v - mu) ** 2, 0) / mids.length) }
+  const k = lm.sd != null ? DSP.lin(lm.sd, 8, 60) : 0, fill = $('#rStab');
+  fill.style.width = (lm.sd != null ? 8 + 92 * k : 0) + '%';
+  fill.style.background = k > .7 ? 'var(--good)' : k > .35 ? 'var(--warn)' : 'var(--bad)';
+  $('#rStabLabel').textContent = 'Stabilità del tono' + (lm.sd != null ? ': ±' + Math.round(lm.sd) + ' cent' : '');
   const stale = !win.length || engine.voicedRun < .5;
   $('#liveMetrics').innerHTML = [
-    ['Jitter', stale ? null : lm.jitter, 2, '%', status(lm.jitter, R.jitter.ok, R.jitter.bad)],
-    ['Shimmer', stale ? null : lm.shimmer, 2, '%', status(lm.shimmer, R.shimmer.ok, R.shimmer.bad)],
-    ['HNR', lm.hnr, 1, 'dB', status(lm.hnr, R.hnr.ok, R.hnr.bad, true)],
-    ['CPP', lm.cpp, 1, 'dB', status(lm.cpp, R.cpp.ok, R.cpp.bad, true)],
-    ['Stabilità', lm.sd, 0, 'cent', status(lm.sd, R.sdCents.ok, R.sdCents.bad)],
-    ['Intensità', last.db > -90 ? last.db : null, 0, 'dBFS', status(Math.abs(last.db + 27), 21, 30)]
+    ['Jitter', stale ? null : lm.jitter, 2, '%', st(lm.jitter, R.jitter.ok, R.jitter.bad)],
+    ['Shimmer', stale ? null : lm.shimmer, 2, '%', st(lm.shimmer, R.shimmer.ok, R.shimmer.bad)],
+    ['HNR', lm.hnr, 1, 'dB', st(lm.hnr, R.hnr.ok, R.hnr.bad, true)],
+    ['CPP', lm.cpp, 1, 'dB', st(lm.cpp, R.cpp.ok, R.cpp.bad, true)],
+    ['H1–H2', stale ? null : lm.h1h2, 1, 'dB', lm.h1h2 == null ? '' : lm.h1h2 > 6 || lm.h1h2 < -4 ? 'warn' : 'good'],
+    ['Intensità', last.db > -90 ? last.db : null, 0, 'dBFS', st(Math.abs(last.db + 27), 21, 30)]
   ].map(([n, v, d, u, s]) => `<div class="metric ${v == null ? '' : s}"><span>${n}</span><b>${fmt(v, d)}</b><span>${u}</span></div>`).join('');
-  // etichette ogni 0,5 s
   if (performance.now() - lastLabel > 500) {
     lastLabel = performance.now();
-    if (session.state === 'count') setChips([{ text: 'Preparati…' }]);
+    if (session.state === 'count') setChips([{ text: 'Preparati… resta in silenzio' }]);
+    else if (session.state === 'rec' && ['sz', 'onset', 'sovt', 'mdv'].includes(ex.kind)) setChips([{ text: 'Registrazione in corso', tone: '' }]);
     else if (win.length < 10) setChips([{ text: session.state === 'rec' ? 'Registrazione: emetti il suono' : 'In ascolto' }]);
-    else {
-      const sustainLike = EX[session.key]?.kind === 'sustain';
-      const labels = DSP.classify({ ...lm, jitter: stale ? null : lm.jitter, shimmer: stale ? null : lm.shimmer, sdCents: sustainLike ? lm.sd : null });
-      setChips(labels.slice(0, 3));
-    }
+    else setChips(DSP.classify({ ...lm, jitter: stale ? null : lm.jitter, shimmer: stale ? null : lm.shimmer, sdCents: ex.kind === 'sustain' ? lm.sd : null }).slice(0, 3));
   }
 }
 
 // ---------- file audio ----------
 $('#fileIn').onchange = async e => {
-  const file = e.target.files[0]; if (!file) return;
-  e.target.value = '';
-  session.key = 'vA'; showView('sessione'); renderInfoFile(file.name); setChips([{ text: 'Analisi del file' }]);
+  const file = e.target.files[0]; if (!file) return; e.target.value = '';
+  const key = $('#fileKind').value;
+  abortRun(); Object.assign(session, { key, state: 'busy', done: false, review: null, phase: 0 });
+  showView('sessione'); setLegend(EX[key].plot); setChips([{ text: 'Analisi del file' }]);
+  $('#exInfo').innerHTML = `<div class="label">Registrazione</div><h2 style="margin-top:2px">${esc(file.name)}</h2><p class="muted" style="margin-top:6px">Analizzata come ${key === 'speech' ? 'parlato' : 'vocale sostenuta'}. Il risultato viene salvato nei progressi.</p>`;
   $('#exResult').hidden = false; $('#exResult').innerHTML = '<p class="muted">Decodifica e analisi in corso…</p>';
   try {
     const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, 44100);
@@ -1085,88 +1272,88 @@ $('#fileIn').onchange = async e => {
     const buf = await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej) });
     let x = buf.getChannelData(0);
     if (buf.numberOfChannels > 1) { const y = buf.getChannelData(1), z = new Float32Array(x.length); for (let i = 0; i < x.length; i++) z[i] = (x[i] + y[i]) / 2; x = z }
-    const kind = 'vA';
-    session.key = kind;
-    const m = analyzeTake(x, buf.sampleRate, kind);
-    session.state = 'idle'; session.done = true;
-    showResult(m, kind, true);
-    startLive();
-  } catch (err) { $('#exResult').innerHTML = '<h3>File non leggibile</h3><p class="muted">Il browser non riesce a decodificare questo formato. Prova con WAV o MP3.</p>' }
+    const m = analyze(key, [x], buf.sampleRate, null);
+    session.state = 'idle'; session.done = true; showResult(m, key, true); startLive();
+  } catch { $('#exResult').innerHTML = '<h3>File non leggibile</h3><p class="muted">Il browser non riesce a decodificare questo formato. Prova con WAV o MP3.</p>' }
 };
-function renderInfoFile(name) {
-  $('#exInfo').innerHTML = `<div class="label">Registrazione</div><h2 style="margin-top:2px">${name.replace(/[<>&]/g, '')}</h2><p class="muted" style="margin-top:6px">Analizzata come vocale sostenuta. Il referto viene salvato nei progressi come "Vocale A".</p>`;
-}
 
 // ---------- progressi ----------
-let history = store.get('history', []);
+const METRICS = [['score', 'Punteggio', 0], ['mpt', 'Tempo max di fonazione (s)', 1], ['szRatio', 'Rapporto s/z', 2], ['hnr', 'HNR (dB)', 1], ['cpp', 'CPP (dB)', 1], ['jitter', 'Jitter (%)', 2], ['shimmer', 'Shimmer (%)', 2], ['f0', 'Altezza media (Hz)', 0], ['softPct', 'Attacchi morbidi (%)', 0], ['dynRange', 'Escursione di intensità (dB)', 1], ['dur', 'Durata (s)', 1]];
+$('#pMetric').innerHTML = METRICS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+function keyValue(r) {
+  const m = r.m || {}, ex = EX[r.ex];
+  if (r.ex === 'sz') return 's/z ' + fmt(m.szRatio, 2);
+  if (r.ex === 'speech') return fmt(m.f0, 0) + ' Hz';
+  if (r.ex === 'onset') return fmt(m.softPct, 0) + ' % morbidi';
+  if (r.ex === 'mdv') return fmt(m.dynRange, 0) + ' dB';
+  if (r.ex === 'sovt') return fmt(m.dur, 1) + ' s';
+  if (ex?.kind === 'gliss' || ex?.kind === 'siren') return 'fluidità ' + fmt(100 * (m.smooth ?? NaN), 0) + ' %';
+  return m.mpt != null ? fmt(m.mpt, 1) + ' s' : '—';
+}
 function renderProgress() {
-  const sel = $('#pEx'), cur = sel.value || 'all';
-  const keys = [...new Set(history.map(r => r.ex))];
-  sel.innerHTML = '<option value="all">Tutti</option>' + keys.map(k => `<option value="${k}">${EX[k]?.name ?? k}</option>`).join('');
+  const sel = $('#pEx'), cur = sel.value || 'all', keys = [...new Set(history.map(r => r.ex))];
+  sel.innerHTML = '<option value="all">Tutti</option>' + keys.map(k => `<option value="${k}">${exName(k)}</option>`).join('');
   sel.value = keys.includes(cur) ? cur : 'all';
-  const rows = history.filter(r => sel.value === 'all' || r.ex === sel.value);
-  drawTrend(rows, $('#pMetric').value);
+  const rowsH = history.filter(r => sel.value === 'all' || r.ex === sel.value);
+  drawTrend(rowsH, $('#pMetric').value);
   if (!history.length) { $('#histTable').innerHTML = '<div class="empty">Nessuna sessione ancora. Completa un esercizio e il risultato comparirà qui.</div>'; return }
-  $('#histTable').innerHTML = `<table class="hist"><thead><tr><th>Data</th><th>Esercizio</th><th style="text-align:right">Punti</th><th style="text-align:right">HNR</th><th style="text-align:right">CPP</th><th style="text-align:right">Jitter</th><th style="text-align:right">Shimmer</th><th style="text-align:right">Durata</th><th>Esito</th><th></th></tr></thead><tbody>
-  ${[...rows].reverse().map(r => `<tr><td>${new Date(r.date).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${EX[r.ex]?.name ?? r.ex}</td>
-    <td class="n"><b>${r.score ?? '—'}</b></td><td class="n">${fmt(r.m.hnr, 1)}</td><td class="n">${fmt(r.m.cpp, 1)}</td><td class="n">${fmt(r.m.jitter, 2)}</td><td class="n">${fmt(r.m.shimmer, 2)}</td><td class="n">${r.m.mpt != null ? fmt(r.m.mpt, 1) + ' s' : '—'}</td>
-    <td>${(r.labels || []).join(', ')}</td><td><button class="btn ghost" data-del="${r.id}" aria-label="Elimina sessione">Elimina</button></td></tr>`).join('')}</tbody></table>`;
+  $('#histTable').innerHTML = `<table class="hist"><thead><tr><th>Data</th><th>Esercizio</th><th style="text-align:right">Punti</th><th style="text-align:right">Misura chiave</th><th style="text-align:right">HNR</th><th style="text-align:right">CPP</th><th>Esito</th><th></th></tr></thead><tbody>
+  ${[...rowsH].reverse().map(r => `<tr><td>${new Date(r.date).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${esc(exName(r.ex))}</td><td class="n"><b>${r.score ?? '—'}</b></td><td class="n">${keyValue(r)}</td><td class="n">${fmt(r.m?.hnr, 1)}</td><td class="n">${fmt(r.m?.cpp, 1)}</td><td>${esc((r.labels || []).join(', '))}</td><td><button class="btn ghost" data-del="${esc(r.id)}">Elimina</button></td></tr>`).join('')}</tbody></table>`;
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     if (b.dataset.armed) { history = history.filter(r => r.id !== b.dataset.del); store.set('history', history); renderProgress() }
     else { b.dataset.armed = 1; b.textContent = 'Conferma'; b.classList.remove('ghost'); setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Elimina'; b.classList.add('ghost') } }, 3000) }
   });
 }
-function drawTrend(rows, key) {
-  const cv = $('#trend'), { g, w, h } = sizeCanvas(cv);
-  g.clearRect(0, 0, w, h);
-  const pts = rows.map(r => ({ d: new Date(r.date).getTime(), v: key === 'score' ? r.score : r.m[key] })).filter(p => p.v != null);
+function drawTrend(rowsH, key) {
+  const cv = $('#trend'), { g, w, h } = sizeCanvas(cv); g.clearRect(0, 0, w, h);
+  const dec = (METRICS.find(x => x[0] === key) || [0, 0, 1])[2];
+  const pts = rowsH.map(r => ({ d: r.date, v: key === 'score' ? r.score : r.m?.[key] })).filter(p => p.v != null && isFinite(p.v));
   const muted = css('--muted'), line = css('--line'), acc = css('--accent');
   g.font = '11px ' + css('--f-mono'); g.fillStyle = muted;
-  if (pts.length < 1) { g.textAlign = 'center'; g.fillText('Ancora nessun dato per questo valore', w / 2, h / 2); g.textAlign = 'left'; return }
-  const padL = 40, padR = 14, padT = 12, padB = 24;
+  if (!pts.length) { g.textAlign = 'center'; g.fillText('Nessun dato per questo valore', w / 2, h / 2); g.textAlign = 'left'; return }
+  const padL = 44, padR = 14, padT = 12, padB = 24;
   let lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
-  if (key === 'score') { lo = 0; hi = 100 } else { const m = (hi - lo) * .15 || Math.abs(hi) * .1 || 1; lo -= m; hi += m }
+  if (key === 'score') { lo = 0; hi = 100 } else { const mg = (hi - lo) * .15 || Math.abs(hi) * .1 || 1; lo -= mg; hi += mg }
   const X = i => pts.length === 1 ? (padL + w - padR) / 2 : padL + i / (pts.length - 1) * (w - padL - padR);
   const Y = v => padT + (hi - v) / (hi - lo) * (h - padT - padB);
   g.textBaseline = 'middle';
-  for (let k = 0; k <= 4; k++) {
-    const v = lo + (hi - lo) * k / 4; g.strokeStyle = line; g.beginPath(); g.moveTo(padL, Y(v) + .5); g.lineTo(w - padR, Y(v) + .5); g.stroke();
-    g.fillText(fmt(v, key === 'jitter' || key === 'shimmer' ? 1 : 0), 4, Y(v));
-  }
+  for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4; g.strokeStyle = line; g.beginPath(); g.moveTo(padL, Y(v) + .5); g.lineTo(w - padR, Y(v) + .5); g.stroke(); g.fillText(fmt(v, dec), 4, Y(v)) }
+  if (key === 'szRatio') { g.strokeStyle = css('--warn'); g.setLineDash([5, 4]); g.beginPath(); g.moveTo(padL, Y(1.2)); g.lineTo(w - padR, Y(1.2)); g.stroke(); g.setLineDash([]) }
   g.textBaseline = 'alphabetic';
   const every = Math.ceil(pts.length / Math.max(1, Math.floor((w - padL) / 70)));
-  pts.forEach((p, i) => { if (i % every === 0) g.fillText(new Date(p.d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }), X(i) - 14, h - 6) });
-  g.globalAlpha = .12; g.fillStyle = acc; g.beginPath(); g.moveTo(X(0), Y(lo));
-  pts.forEach((p, i) => g.lineTo(X(i), Y(p.v))); g.lineTo(X(pts.length - 1), Y(lo)); g.closePath(); g.fill(); g.globalAlpha = 1;
+  pts.forEach((p, i) => { if (i % every === 0) g.fillText(new Date(p.d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }), Math.min(X(i) - 14, w - padR - 34), h - 6) });
+  g.globalAlpha = .12; g.fillStyle = acc; g.beginPath(); g.moveTo(X(0), Y(lo)); pts.forEach((p, i) => g.lineTo(X(i), Y(p.v))); g.lineTo(X(pts.length - 1), Y(lo)); g.closePath(); g.fill(); g.globalAlpha = 1;
   g.strokeStyle = acc; g.lineWidth = 2; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(i), Y(p.v)) : g.moveTo(X(i), Y(p.v))); g.stroke();
   pts.forEach((p, i) => { g.fillStyle = i === pts.length - 1 ? acc : css('--surface'); g.strokeStyle = acc; g.lineWidth = 2; g.beginPath(); g.arc(X(i), Y(p.v), i === pts.length - 1 ? 5 : 3.5, 0, 7); g.fill(); g.stroke() });
 }
 $('#pEx').onchange = renderProgress; $('#pMetric').onchange = renderProgress;
 $('#btnExport').onclick = () => {
-  const blob = new Blob([JSON.stringify({ app: 'vocalis', version: 1, settings, history }, null, 1)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'vocalis', version: 2, settings, history }, null, 1)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vocalis-backup-' + new Date().toISOString().slice(0, 10) + '.json';
   document.body.appendChild(a); a.click(); a.remove();
 };
 $('#impIn').onchange = async e => {
   const f = e.target.files[0]; if (!f) return; e.target.value = '';
   try {
-    const d = JSON.parse(await f.text()); const ids = new Set(history.map(r => r.id));
-    (d.history || []).forEach(r => { if (r && r.id && !ids.has(r.id)) history.push(r) });
+    const d = JSON.parse(await f.text()), ids = new Set(history.map(r => r.id));
+    (d.history || []).forEach(r => { if (r && r.id && r.date && !ids.has(r.id)) history.push(r) });
     history.sort((a, b) => a.date.localeCompare(b.date)); store.set('history', history); renderProgress();
   } catch { $('#histTable').insertAdjacentHTML('afterbegin', '<p class="notice"><b>Backup non valido.</b> Scegli un file esportato da Vocalis.</p>') }
 };
 
 // ---------- guida ----------
 $('#guide').innerHTML = [
-  ['Pitch (F0)', 'La frequenza fondamentale: quante volte al secondo vibrano le corde vocali. Vocalis la stima con l\'algoritmo YIN e la converte in nota (solfeggio italiano, La3 = 220 Hz).', 'voce maschile parlata ~ 100–150 Hz · femminile ~ 180–250 Hz'],
-  ['Jitter', 'Variazione della durata da un ciclo vibratorio al successivo. Alto quando le corde vibrano in modo irregolare: contribuisce alla voce rauca. Misurato solo su note tenute.', 'normale < 1,04 % (soglia MDVP/Praat)'],
-  ['Shimmer', 'Variazione dell\'ampiezza tra cicli consecutivi. Cresce con raucedine, chiusura incompleta e affaticamento. Risente anche del rumore della stanza.', 'normale < 3,81 %'],
-  ['HNR', 'Rapporto armoniche/rumore: quanta parte del suono è periodica rispetto al rumore (aria, attrito). Basso nella voce soffiata e in quella rauca.', 'voce sana in vocale sostenuta ≥ 20 dB'],
-  ['CPP', 'Prominenza del picco cepstrale: quanto è netta la periodicità nello spettro. È l\'indice più robusto per la disfonia e funziona anche nel parlato. La scala dipende dall\'algoritmo: confronta i tuoi valori nel tempo.', 'Vocalis: ≥ 27 buono · < 21 basso'],
-  ['H1–H2', 'Differenza tra la prima e la seconda armonica. Valori alti indicano emissione soffiata (molta aria, chiusura debole); valori molto bassi con volume alto indicano emissione pressata o tesa. Varia con la vocale.', 'circa −4 … +6 dB in emissione modale'],
-  ['Stabilità del tono', 'Deviazione standard del pitch in cent durante una nota tenuta, al netto della deriva lenta. 100 cent = 1 semitono.', '≤ 20 cent stabile · > 50 instabile'],
-  ['Tempo massimo di fonazione', 'Quanto riesci a tenere la vocale con un unico respiro. Misura la coordinazione tra fiato e chiusura glottica.', 'adulti ≥ 15–20 s; sotto 10 s merita attenzione'],
-  ['Punteggio qualità vocale', 'Media pesata di CPP (30 %), HNR (20 %), stabilità (20 %), jitter e shimmer (15 % ciascuno). Nei glissati e nelle sirene sostituisce stabilità, jitter e shimmer con fluidità ed estensione.', '75–100 buona · 50–74 discreta · < 50 da migliorare']
+  ['Tempo massimo di fonazione', 'Quanto tieni una vocale con un solo respiro, a voce comoda. Misura insieme fiato e chiusura delle corde vocali. È il primo indice che migliora con la terapia.', 'adulti ≥ 15–20 s · sotto 10 s merita attenzione'],
+  ['Rapporto s/z', 'La S è solo aria, la Z è aria più vibrazione delle corde. Se le corde chiudono bene durano uguali; se la Z è molto più corta, parte dell\'aria sfugge dalla glottide.', '≈ 1,0 normale · > 1,4 da segnalare'],
+  ['Altezza (F0)', 'Frequenza a cui vibrano le corde vocali, in Hz. In logopedia interessa la tua altezza abituale e la sua stabilità, non la nota musicale.', 'parlato adulto: uomo ~ 100–150 Hz · donna ~ 180–250 Hz'],
+  ['Jitter e shimmer', 'Piccole irregolarità di durata (jitter) e di ampiezza (shimmer) tra un ciclo vibratorio e il successivo. Crescono con raucedine e affaticamento. Si misurano solo sulle vocali tenute.', 'jitter < 1,04 % · shimmer < 3,81 %'],
+  ['HNR', 'Rapporto tra la parte regolare della voce (armoniche) e il rumore. Basso nella voce soffiata e in quella rauca.', 'voce sana in vocale tenuta ≥ 20 dB'],
+  ['CPP', 'Quanto è netta la periodicità della voce. È l\'indice acustico più affidabile per la disfonia e funziona anche nel parlato. La scala dipende dall\'algoritmo: confronta i tuoi valori nel tempo.', `Vocalis: ≥ ${R.cpp.ok} buono · < ${R.cpp.bad} basso`],
+  ['H1–H2', 'Differenza tra prima e seconda armonica. Alta nell\'emissione soffiata, molto bassa con volume alto nell\'emissione tesa o pressata. Varia con la vocale.', 'circa −4 … +6 dB'],
+  ['Attacco morbido', 'Come inizia la vocale. Duro: colpo secco della glottide, che affatica le corde. Soffiato: aria prima della voce. Morbido: il suono cresce in poche decine di millisecondi.', 'salita ideale ~ 30–150 ms'],
+  ['Messa di voce', 'Crescendo e diminuendo su una vocale. Allena il controllo del fiato senza aumentare la tensione: il tono non dovrebbe salire con il volume.', 'escursione ≥ 15 dB · tono stabile entro 100 cent'],
+  ['Cannuccia e labbra vibranti', 'Esercizi a tratto vocale semi-occluso: la resistenza in bocca riduce lo sforzo delle corde e favorisce una vibrazione efficiente. Si misura la costanza del flusso.', 'flusso regolare entro ± 2 dB'],
+  ['Punteggio', 'Ogni esercizio ha il suo punteggio da 0 a 100. Per le vocali pesano CPP, HNR, stabilità, jitter e shimmer; per gli altri esercizi l\'obiettivo specifico (rapporto s/z, attacchi morbidi, controllo del crescendo, costanza del flusso).', '75–100 buono · 50–74 discreto · < 50 da migliorare']
 ].map(([t, d, r]) => `<div class="panel"><h3>${t}</h3><p>${d}</p><div class="ref">${r}</div></div>`).join('');
 
 // ---------- navigazione ----------
@@ -1178,16 +1365,14 @@ function showView(name) {
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
   const t = b.dataset.tab;
-  if (t === 'libero') { stopRec(); session.done = false; session.review = null; openSession('free'); return }
-  if (session.state === 'rec') stopRec();
-  session.state = 'idle'; session.key = null;
-  showView(t); if (t === 'esercizi') renderGrid();
+  if (t === 'libero') { openSession('free'); return }
+  abortRun(); session.key = null; showView(t); if (t === 'esercizi') renderGrid();
 });
 window.addEventListener('resize', () => { if (!$('#v-progressi').hidden) renderProgress() });
-
 if (!window.isSecureContext || !navigator.mediaDevices) micProblem('unsupported');
-renderSettings(); renderGrid();
+renderGrid();
 })();
+
 </script>
 
 </body>
