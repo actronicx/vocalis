@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vocalis</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#F1F4F2">
+<meta name="theme-color" content="#2A47C0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: banco di lavoro a due colonne — strumento (tracciato del pitch) a sinistra, comandi ed esito a destra; una colonna su telefono */
@@ -163,6 +167,8 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
 </style>
 <style>
 [hidden] { display: none !important }
+a.brand { color: inherit; text-decoration: none; border-radius: 12px }
+a.brand:hover h1 { color: var(--accent) }
 .hzbig { font-family: var(--f-display); font-weight: 700; font-size: 2.6rem; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums }
 .hzbig small { font-size: 1rem; color: var(--muted); font-weight: 500; margin-left: 4px }
 .hzbig.off { color: var(--line) }
@@ -188,10 +194,10 @@ table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">
+    <a class="brand" href="#" id="brandHome" title="Torna alla home">
       <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="var(--accent)"/><path d="M6 22c3 0 3-8 6-8s3 14 6 14 3-18 6-18 3 14 6 14 3-6 4-6" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round"/></svg>
       <div><h1>Vocalis</h1><p>Esercizi di logopedia con analisi acustica della voce</p></div>
-    </div>
+    </a>
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="esercizi" aria-selected="true">Esercizi</button>
       <button role="tab" data-tab="libero" aria-selected="false">Ascolto libero</button>
@@ -1368,6 +1374,7 @@ document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
   if (t === 'libero') { openSession('free'); return }
   abortRun(); session.key = null; showView(t); if (t === 'esercizi') renderGrid();
 });
+$('#brandHome').onclick = e => { e.preventDefault(); abortRun(); session.key = null; showView('esercizi'); renderGrid(); window.scrollTo(0, 0) };
 window.addEventListener('resize', () => { if (!$('#v-progressi').hidden) renderProgress() });
 if (!window.isSecureContext || !navigator.mediaDevices) micProblem('unsupported');
 renderGrid();
