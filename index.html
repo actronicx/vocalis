@@ -1,0 +1,1194 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vocalis</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#F1F4F2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: banco di lavoro a due colonne — strumento (tracciato del pitch) a sinistra, comandi ed esito a destra; una colonna su telefono */
+:root {
+  --bg: #F1F4F2; --surface: #FFFFFF; --sunk: #E7ECE9; --ink: #15201C; --muted: #5A6862; --line: #D3DBD7;
+  --accent: #2A47C0; --accent-ink: #FFFFFF; --accent-soft: #E3E8FA;
+  --good: #1D8556; --warn: #B87108; --bad: #BE3A28;
+  --good-soft: #DDF1E6; --warn-soft: #F8EBD3; --bad-soft: #F7DFDA;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1412; --surface: #161E1B; --sunk: #1C2622; --ink: #E5ECE8; --muted: #92A29B; --line: #2B3733;
+  --accent: #93A6FF; --accent-ink: #0E1412; --accent-soft: #232C4E;
+  --good: #4CC48A; --warn: #E3A33F; --bad: #F07A66;
+  --good-soft: #17352A; --warn-soft: #3A2D16; --bad-soft: #3D1F1A; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1412; --surface: #161E1B; --sunk: #1C2622; --ink: #E5ECE8; --muted: #92A29B; --line: #2B3733;
+  --accent: #93A6FF; --accent-ink: #0E1412; --accent-soft: #232C4E;
+  --good: #4CC48A; --warn: #E3A33F; --bad: #F07A66;
+  --good-soft: #17352A; --warn-soft: #3A2D16; --bad-soft: #3D1F1A; color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html, body { background: var(--bg); color: var(--ink) }
+body { font: 16px/1.5 var(--f-body); margin: 0 }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 48px }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15 }
+h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em }
+h2 { font-size: 1.25rem; font-weight: 700 }
+h3 { font-size: 1.02rem; font-weight: 700 }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+.label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700 }
+button, select, input { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px }
+
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 8px 14px; border-bottom: 1px solid var(--line) }
+.brand { display: flex; align-items: center; gap: 12px }
+.brand svg { width: 38px; height: 38px; flex: none }
+.brand p { margin: 2px 0 0; font-size: .86rem; color: var(--muted) }
+nav.tabs { display: flex; gap: 4px; background: var(--sunk); padding: 4px; border-radius: 999px; flex-wrap: wrap }
+nav.tabs button { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: .9rem; color: var(--muted) }
+nav.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .12) }
+
+.notice { margin-top: 14px; padding: 12px 14px; border-radius: var(--r); background: var(--warn-soft); color: var(--ink); font-size: .92rem }
+.notice b { color: var(--warn) }
+
+main { margin-top: 18px }
+.view[hidden] { display: none }
+
+/* griglia esercizi */
+.exgroup { display: grid; gap: 10px; margin-bottom: 22px }
+.exgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px }
+.excard { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 14px; display: grid; gap: 6px; align-content: start; min-height: 112px; transition: border-color .15s, transform .15s }
+.excard:hover { border-color: var(--accent); transform: translateY(-1px) }
+.excard .glyph { font-family: var(--f-display); font-size: 1.9rem; font-weight: 700; line-height: 1; color: var(--accent) }
+.excard .glyph svg { width: 56px; height: 28px; display: block }
+.excard small { color: var(--muted); font-size: .84rem; line-height: 1.35 }
+.excard .last { font-family: var(--f-mono); font-size: .76rem; color: var(--muted) }
+
+.settings { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; background: var(--sunk); border-radius: var(--r); padding: 12px 14px; margin-bottom: 22px }
+.field { display: grid; gap: 3px }
+.field select { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 104px }
+
+/* sessione */
+.session { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start }
+@media (max-width: 860px) { .session { grid-template-columns: minmax(0, 1fr) } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px }
+.stage { display: grid; gap: 12px }
+.readout { display: flex; align-items: center; gap: 16px; flex-wrap: wrap }
+.note { font-family: var(--f-display); font-weight: 700; font-size: 2.8rem; line-height: 1; min-width: 4.2ch; letter-spacing: -0.02em }
+.note.off { color: var(--line) }
+.hz { font-family: var(--f-mono); font-size: .9rem; color: var(--muted) }
+.cents { flex: 1; min-width: 160px; display: grid; gap: 4px }
+.cents .bar { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--bad-soft), var(--good-soft) 40%, var(--good-soft) 60%, var(--bad-soft)) }
+.cents .bar::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--muted) }
+.cents .needle { position: absolute; top: -4px; width: 4px; height: 18px; margin-left: -2px; border-radius: 2px; background: var(--ink); left: 50%; transition: left .08s linear }
+.cents .scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: .7rem; color: var(--muted) }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-weight: 700; font-size: .88rem; background: var(--sunk); color: var(--muted) }
+.chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor }
+.chip.good { background: var(--good-soft); color: var(--good) }
+.chip.warn { background: var(--warn-soft); color: var(--warn) }
+.chip.bad { background: var(--bad-soft); color: var(--bad) }
+
+.plotbox { position: relative; border-radius: 10px; background: var(--sunk); overflow: hidden }
+canvas.plot { display: block; width: 100%; height: 280px }
+@media (max-width: 520px) { canvas.plot { height: 220px } }
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 4rem; color: var(--accent); pointer-events: none }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: .78rem; color: var(--muted) }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px }
+
+.meter { display: grid; gap: 4px }
+.meter .track { position: relative; height: 12px; border-radius: 6px; background: var(--sunk); overflow: hidden }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); border-radius: 6px; transition: width .06s linear }
+.meter .zone { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--muted); border-right: 1px dashed var(--muted) }
+.meter .scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: .7rem; color: var(--muted) }
+
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+@media (min-width: 620px) { .metrics { grid-template-columns: repeat(6, minmax(0, 1fr)) } }
+.metric { background: var(--sunk); border-radius: 10px; padding: 8px 10px; display: grid; gap: 1px; border-top: 3px solid transparent }
+.metric b { font-family: var(--f-mono); font-size: 1.05rem; font-variant-numeric: tabular-nums }
+.metric span { font-size: .72rem; color: var(--muted) }
+.metric.good { border-top-color: var(--good) } .metric.warn { border-top-color: var(--warn) } .metric.bad { border-top-color: var(--bad) }
+
+.side { display: grid; gap: 14px }
+.side p { margin: 0 }
+.steps { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: .94rem }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 14px; font-weight: 700 }
+.btn:hover { border-color: var(--accent) }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.btn.big { padding: 13px 20px; font-size: 1.05rem; flex: 1 }
+.btn.stop { background: var(--bad); color: #fff; border-color: var(--bad) }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted) }
+.btn:disabled { opacity: .5; cursor: default }
+.back { border: 0; background: none; color: var(--accent); font-weight: 700; padding: 0; margin-bottom: 10px }
+.timer { font-family: var(--f-mono); font-size: 1.6rem; font-variant-numeric: tabular-nums }
+
+/* esito */
+.result { display: grid; gap: 12px }
+.scorebox { display: flex; gap: 16px; align-items: center }
+.ring { width: 96px; height: 96px; flex: none }
+.ring text { font-family: var(--f-display); font-weight: 700 }
+table.mt { width: 100%; border-collapse: collapse; font-size: .9rem }
+table.mt td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top }
+table.mt td:nth-child(2) { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap }
+table.mt td:nth-child(3) { color: var(--muted); font-size: .78rem; text-align: right; white-space: nowrap }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted) }
+.dot.good { background: var(--good) } .dot.warn { background: var(--warn) } .dot.bad { background: var(--bad) }
+.tips { margin: 0; padding-left: 1.1em; font-size: .92rem; display: grid; gap: 4px }
+
+/* progressi */
+.prog { display: grid; gap: 16px }
+.prog .head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; justify-content: space-between }
+canvas.trend { display: block; width: 100%; height: 240px }
+.histwrap { overflow-x: auto }
+table.hist { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 640px }
+table.hist th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 6px; border-bottom: 1px solid var(--line) }
+table.hist td { padding: 7px 6px; border-bottom: 1px solid var(--line) }
+table.hist td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right }
+.empty { padding: 26px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r) }
+
+/* guida */
+.guide { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px }
+.guide .panel p { margin: 6px 0 0; font-size: .93rem }
+.guide .ref { font-family: var(--f-mono); font-size: .82rem; color: var(--accent); margin-top: 6px }
+.disclaimer { margin-top: 16px; font-size: .88rem; color: var(--muted); max-width: 70ch }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="var(--accent)"/><path d="M6 22c3 0 3-8 6-8s3 14 6 14 3-18 6-18 3 14 6 14 3-6 4-6" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <div><h1>Vocalis</h1><p>Esercizi di vocalizzo con analisi acustica in tempo reale</p></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="esercizi" aria-selected="true">Esercizi</button>
+      <button role="tab" data-tab="libero" aria-selected="false">Ascolto libero</button>
+      <button role="tab" data-tab="progressi" aria-selected="false">Progressi</button>
+      <button role="tab" data-tab="guida" aria-selected="false">Guida</button>
+    </nav>
+  </header>
+
+  <div class="notice" id="micNotice" hidden></div>
+
+  <main>
+    <!-- ESERCIZI: elenco -->
+    <section class="view" id="v-esercizi">
+      <div class="settings">
+        <div class="field"><label class="label" for="sProfile">Voce</label>
+          <select id="sProfile"><option value="m">Maschile</option><option value="f">Femminile</option></select></div>
+        <div class="field"><label class="label" for="sLow">Nota grave</label><select id="sLow"></select></div>
+        <div class="field"><label class="label" for="sHigh">Nota acuta</label><select id="sHigh"></select></div>
+        <div class="field"><label class="label" for="sTarget">Nota target</label><select id="sTarget"></select></div>
+        <p class="muted" style="margin:0;font-size:.84rem;max-width:36ch">Tieni il telefono o il microfono a circa 30 cm dalla bocca, in una stanza silenziosa.</p>
+      </div>
+
+      <div class="exgroup">
+        <div class="label">Vocali sostenute</div>
+        <div class="exgrid" id="gridVowels"></div>
+      </div>
+      <div class="exgroup">
+        <div class="label">Intonazione e agilità</div>
+        <div class="exgrid" id="gridMoves"></div>
+      </div>
+      <div class="exgroup">
+        <div class="label">Da una registrazione</div>
+        <div class="exgrid">
+          <label class="excard" for="fileIn" style="cursor:pointer">
+            <span class="glyph"><svg viewBox="0 0 56 28"><path d="M4 14h6l3-8 4 16 4-12 3 8 3-4h25" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <h3>Analizza un file audio</h3>
+            <small>Carica una vocale sostenuta registrata (WAV, MP3, M4A) e ricevi lo stesso referto.</small>
+          </label>
+          <input type="file" id="fileIn" accept="audio/*" hidden>
+        </div>
+      </div>
+    </section>
+
+    <!-- SESSIONE (esercizio guidato o ascolto libero) -->
+    <section class="view" id="v-sessione" hidden>
+      <button class="back" id="btnBack">← Tutti gli esercizi</button>
+      <div class="session">
+        <div class="panel stage">
+          <div class="readout">
+            <div><div class="note off" id="rNote">—</div><div class="hz" id="rHz">— Hz</div></div>
+            <div class="cents">
+              <div class="label" id="rCentsLabel">Intonazione</div>
+              <div class="bar"><div class="needle" id="rNeedle"></div></div>
+              <div class="scale"><span>−50</span><span>0 cent</span><span>+50</span></div>
+            </div>
+          </div>
+          <div class="chips" id="liveChips"><span class="chip">In attesa del microfono</span></div>
+          <div class="plotbox"><canvas class="plot" id="plot"></canvas><div class="overlay" id="countdown" hidden></div></div>
+          <div class="legend"><span><i style="background:var(--good)"></i>armonica (HNR ≥ 20 dB)</span><span><i style="background:var(--warn)"></i>rumore moderato</span><span><i style="background:var(--bad)"></i>rumorosa / irregolare</span><span id="legTarget"><i style="background:var(--accent)"></i>traccia guida</span></div>
+          <div class="meter">
+            <div class="label">Intensità (dBFS)</div>
+            <div class="track"><div class="zone" style="left:20%;right:10%"></div><div class="fill" id="rMeter"></div></div>
+            <div class="scale"><span>−60</span><span>troppo bassa ← zona utile → troppo alta</span><span>0</span></div>
+          </div>
+          <div class="metrics" id="liveMetrics"></div>
+        </div>
+
+        <div class="side">
+          <div class="panel" id="exInfo"></div>
+          <div class="panel result" id="exResult" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROGRESSI -->
+    <section class="view prog" id="v-progressi" hidden>
+      <div class="head">
+        <div><h2>Andamento</h2><p class="muted" style="margin:2px 0 0">Ogni esercizio completato viene salvato su questo dispositivo.</p></div>
+        <div class="settings" style="margin:0">
+          <div class="field"><label class="label" for="pEx">Esercizio</label><select id="pEx"></select></div>
+          <div class="field"><label class="label" for="pMetric">Valore</label>
+            <select id="pMetric"><option value="score">Punteggio</option><option value="hnr">HNR (dB)</option><option value="cpp">CPP (dB)</option><option value="jitter">Jitter (%)</option><option value="shimmer">Shimmer (%)</option><option value="mpt">Tempo di fonazione (s)</option><option value="rangeSt">Estensione (semitoni)</option></select></div>
+        </div>
+      </div>
+      <div class="panel"><canvas class="trend" id="trend"></canvas></div>
+      <div class="panel">
+        <div class="btnrow" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3>Sessioni</h3>
+          <div class="btnrow">
+            <button class="btn" id="btnExport">Esporta backup</button>
+            <label class="btn" for="impIn" style="cursor:pointer">Importa backup</label>
+            <input type="file" id="impIn" accept="application/json,.json" hidden>
+          </div>
+        </div>
+        <div class="histwrap" id="histTable"></div>
+      </div>
+    </section>
+
+    <!-- GUIDA -->
+    <section class="view" id="v-guida" hidden>
+      <div class="guide" id="guide"></div>
+      <p class="disclaimer">Vocalis misura parametri acustici con algoritmi standard, ma il microfono di un telefono, la stanza e la distanza influenzano i valori. Usa i numeri per confrontarti con te stesso nel tempo, sempre nelle stesse condizioni. Non sostituisce la valutazione del logopedista o del foniatra: se la raucedine dura più di 2–3 settimane, fatti visitare.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+// Motore di analisi vocale — funzioni pure, senza dipendenze dal browser.
+const DSP = (() => {
+  const LOG2 = Math.log(2);
+
+  function rmsDb(x, a = 0, b = x.length) {
+    let s = 0;
+    for (let i = a; i < b; i++) s += x[i] * x[i];
+    const r = Math.sqrt(s / Math.max(1, b - a));
+    return 20 * Math.log10(r + 1e-9);
+  }
+
+  // YIN (de Cheveigné & Kawahara 2002) con interpolazione parabolica
+  function yin(x, sr, fmin = 65, fmax = 1100, thr = 0.15) {
+    const tauMax = Math.min(Math.floor(sr / fmin), Math.floor(x.length / 2));
+    const tauMin = Math.max(2, Math.floor(sr / fmax));
+    const W = x.length - tauMax;
+    if (W < tauMax) return { f0: 0, clarity: 0 };
+    const d = new Float32Array(tauMax + 1);
+    for (let tau = 1; tau <= tauMax; tau++) {
+      let s = 0;
+      for (let i = 0; i < W; i++) { const v = x[i] - x[i + tau]; s += v * v; }
+      d[tau] = s;
+    }
+    const c = new Float32Array(tauMax + 1);
+    c[0] = 1; let run = 0;
+    for (let tau = 1; tau <= tauMax; tau++) { run += d[tau]; c[tau] = run > 0 ? d[tau] * tau / run : 1; }
+    let best = -1;
+    for (let tau = tauMin; tau <= tauMax; tau++) {
+      if (c[tau] < thr) {
+        while (tau + 1 <= tauMax && c[tau + 1] < c[tau]) tau++;
+        best = tau; break;
+      }
+    }
+    if (best < 0) {
+      // nessun minimo sotto soglia: prendi il minimo globale ma segnalalo come poco chiaro
+      let m = 1e9;
+      for (let tau = tauMin; tau <= tauMax; tau++) if (c[tau] < m) { m = c[tau]; best = tau; }
+      if (m > 0.35) return { f0: 0, clarity: 1 - m };
+    }
+    let t = best;
+    if (best > 1 && best < tauMax) {
+      const a = c[best - 1], b = c[best], cc = c[best + 1];
+      const den = a - 2 * b + cc;
+      if (den !== 0) t = best + 0.5 * (a - cc) / den;
+    }
+    return { f0: sr / t, clarity: 1 - c[best] };
+  }
+
+  // HNR da autocorrelazione normalizzata al periodo (Boersma 1993, forma semplificata)
+  function hnr(x, sr, f0) {
+    if (!f0) return null;
+    const T = Math.round(sr / f0);
+    const n = x.length - T;
+    if (n < T * 2) return null;
+    let sxy = 0, sxx = 0, syy = 0;
+    // prova lag vicini per compensare l'arrotondamento
+    let bestR = -1;
+    for (let L = T - 1; L <= T + 1; L++) {
+      sxy = 0; sxx = 0; syy = 0;
+      const m = x.length - L;
+      for (let i = 0; i < m; i++) { sxy += x[i] * x[i + L]; sxx += x[i] * x[i]; syy += x[i + L] * x[i + L]; }
+      const r = sxy / Math.sqrt(sxx * syy + 1e-12);
+      if (r > bestR) bestR = r;
+    }
+    const r = Math.min(0.9999, Math.max(1e-4, bestR));
+    return 10 * Math.log10(r / (1 - r));
+  }
+
+  // FFT radix-2 in place
+  function fft(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const a = i + k, b = a + len / 2;
+          const tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+          const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+        }
+      }
+    }
+  }
+
+  function nextPow2(n) { let p = 1; while (p < n) p <<= 1; return p; }
+
+  // Spettro in dB (finestra di Hann, zero-padding a potenza di 2)
+  function spectrumDb(x, nfft) {
+    const n = nfft || nextPow2(x.length);
+    const re = new Float64Array(n), im = new Float64Array(n);
+    const L = Math.min(x.length, n);
+    for (let i = 0; i < L; i++) re[i] = x[i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (L - 1)));
+    fft(re, im);
+    const out = new Float64Array(n / 2 + 1);
+    for (let k = 0; k <= n / 2; k++) out[k] = 10 * Math.log10(re[k] * re[k] + im[k] * im[k] + 1e-14);
+    return { db: out, n };
+  }
+
+  // Cepstral Peak Prominence (alla Hillenbrand): picco cepstrale meno la retta di regressione
+  function cpp(x, sr, fmin = 60, fmax = 880) {
+    const { db, n } = spectrumDb(x);
+    const re = new Float64Array(n), im = new Float64Array(n);
+    for (let k = 0; k <= n / 2; k++) re[k] = db[k];
+    for (let k = n / 2 + 1; k < n; k++) re[k] = db[n - k];
+    fft(re, im);
+    const ceps = new Float64Array(n / 2);
+    for (let q = 0; q < n / 2; q++) {
+      const v = Math.hypot(re[q], im[q]) / n;
+      ceps[q] = 20 * Math.log10(v + 1e-12);
+    }
+    const q0 = Math.max(1, Math.floor(sr / fmax)), q1 = Math.min(n / 2 - 1, Math.ceil(sr / fmin));
+    let pk = q0;
+    for (let q = q0; q <= q1; q++) if (ceps[q] > ceps[pk]) pk = q;
+    // regressione su 1 ms .. metà quefrenza disponibile
+    const r0 = Math.max(1, Math.floor(sr * 0.001)), r1 = n / 2 - 1;
+    let sx = 0, sy = 0, sxx = 0, sxy = 0, m = 0;
+    for (let q = r0; q <= r1; q++) { sx += q; sy += ceps[q]; sxx += q * q; sxy += q * ceps[q]; m++; }
+    const slope = (m * sxy - sx * sy) / (m * sxx - sx * sx);
+    const icpt = (sy - slope * sx) / m;
+    return { cpp: ceps[pk] - (icpt + slope * pk), f0: sr / pk };
+  }
+
+  // H1-H2 e rapporto alfa (energia 1-5 kHz vs 50-1000 Hz)
+  function spectralShape(x, sr, f0) {
+    const { db, n } = spectrumDb(x, Math.max(4096, nextPow2(x.length)));
+    const hz = sr / n;
+    function peakNear(f) {
+      const a = Math.max(1, Math.floor(f * 0.85 / hz)), b = Math.min(db.length - 1, Math.ceil(f * 1.15 / hz));
+      let m = -1e9; for (let k = a; k <= b; k++) if (db[k] > m) m = db[k];
+      return m;
+    }
+    let h1h2 = null;
+    if (f0) h1h2 = peakNear(f0) - peakNear(2 * f0);
+    let lo = 0, hi = 0;
+    for (let k = 1; k < db.length; k++) {
+      const f = k * hz, p = Math.pow(10, db[k] / 10);
+      if (f >= 50 && f < 1000) lo += p; else if (f >= 1000 && f < 5000) hi += p;
+    }
+    return { h1h2, alpha: 10 * Math.log10((hi + 1e-14) / (lo + 1e-14)) };
+  }
+
+  // Jitter e shimmer locali tramite inseguimento ciclo per ciclo (waveform matching)
+  function perturbation(x, sr, f0) {
+    if (!f0) return null;
+    let T0 = sr / f0;
+    const periods = [], amps = [];
+    let p = 0;
+    // parte da un massimo nel primo periodo
+    { let m = -1e9; for (let i = 0; i < Math.round(T0); i++) if (x[i] > m) { m = x[i]; p = i; } }
+    const win = Math.round(T0);
+    while (p + 2.4 * T0 + 2 < x.length) {
+      const lo = Math.floor(T0 * 0.75), hi = Math.ceil(T0 * 1.25);
+      const vals = new Float64Array(hi + 2);
+      let bestL = -1, best = -2;
+      for (let L = lo; L <= hi + 1; L++) {
+        let sxy = 0, sxx = 0, syy = 0;
+        for (let i = 0; i < win; i++) { const a = x[p + i], b = x[p + L + i]; sxy += a * b; sxx += a * a; syy += b * b; }
+        const r = sxy / Math.sqrt(sxx * syy + 1e-12);
+        vals[L] = r;
+        if (L <= hi && r > best) { best = r; bestL = L; }
+      }
+      if (best < 0.5) break; // ciclo non periodico: interrompi il segmento
+      let T = bestL;
+      if (bestL > lo) {
+        const a = vals[bestL - 1], b = vals[bestL], c = vals[bestL + 1];
+        const den = a - 2 * b + c; if (den !== 0) T = bestL + 0.5 * (a - c) / den;
+      }
+      let mx = -1e9, mn = 1e9;
+      const end = p + Math.round(T);
+      for (let i = p; i < end; i++) { if (x[i] > mx) mx = x[i]; if (x[i] < mn) mn = x[i]; }
+      periods.push(T); amps.push(mx - mn);
+      p = end; T0 = 0.7 * T0 + 0.3 * T;
+    }
+    if (periods.length < 8) return null;
+    let dp = 0, sp = 0, da = 0, sa = 0;
+    for (let i = 0; i < periods.length; i++) { sp += periods[i]; sa += amps[i]; }
+    for (let i = 1; i < periods.length; i++) { dp += Math.abs(periods[i] - periods[i - 1]); da += Math.abs(amps[i] - amps[i - 1]); }
+    const n = periods.length;
+    return {
+      jitter: 100 * (dp / (n - 1)) / (sp / n),
+      shimmer: 100 * (da / (n - 1)) / (sa / n),
+      cycles: n
+    };
+  }
+
+  const NOTE_NAMES = ['Do', 'Do♯', 'Re', 'Re♯', 'Mi', 'Fa', 'Fa♯', 'Sol', 'Sol♯', 'La', 'La♯', 'Si'];
+  function hzToMidi(f) { return 69 + 12 * Math.log(f / 440) / LOG2; }
+  function midiToHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function noteName(midi) {
+    const r = Math.round(midi);
+    return NOTE_NAMES[((r % 12) + 12) % 12] + (Math.floor(r / 12) - 1);
+  }
+
+  // ---- Interpretazione ----
+  // Soglie di riferimento: jitter 1,04 % e shimmer 3,81 % (soglie MDVP/Praat per vocale sostenuta),
+  // HNR > 20 dB tipico di voce sana, CPP tarato su questo stesso algoritmo.
+  const REF = {
+    jitter: { ok: 1.04, bad: 2.2 },
+    shimmer: { ok: 3.81, bad: 7.5 },
+    hnr: { ok: 20, bad: 12 },
+    cpp: { ok: 27, bad: 21, good100: 34, bad0: 18 }, // tarato su voci sintetiche con questo algoritmo
+    sdCents: { ok: 20, bad: 50 }
+  };
+
+  function lin(v, good, bad) {
+    if (v == null || isNaN(v)) return null;
+    const t = (v - bad) / (good - bad);
+    return Math.max(0, Math.min(1, t));
+  }
+
+  function score(m, kind) {
+    const parts = [];
+    const add = (s, w) => { if (s != null) parts.push([s, w]); };
+    if (kind === 'sustain') {
+      add(lin(m.jitter, 0.4, 2.5), 0.15);
+      add(lin(m.shimmer, 2, 9), 0.15);
+      add(lin(m.sdCents, 8, 60), 0.2);
+    } else {
+      add(lin(m.smooth, 0.9, 0.4), 0.25);
+      add(lin(m.rangeSt, 12, 3), 0.15);
+    }
+    add(lin(m.hnr, 24, 8), 0.2);
+    add(lin(m.cpp, REF.cpp.good100, REF.cpp.bad0), 0.3);
+    if (!parts.length) return null;
+    let s = 0, w = 0; for (const [a, b] of parts) { s += a * b; w += b; }
+    return Math.round(100 * s / w);
+  }
+
+  // Restituisce le etichette di feedback in ordine di importanza
+  function classify(m) {
+    const out = [];
+    if (m.db != null && m.db < -48) out.push({ key: 'low', text: 'Intensità troppo bassa', tone: 'warn' });
+    if (m.db != null && m.db > -6) out.push({ key: 'high', text: 'Intensità troppo elevata', tone: 'warn' });
+    const irr = (m.jitter != null && m.jitter > REF.jitter.ok) || (m.shimmer != null && m.shimmer > REF.shimmer.ok);
+    const irrHi = (m.jitter != null && m.jitter > REF.jitter.bad) || (m.shimmer != null && m.shimmer > REF.shimmer.bad);
+    const noisy = (m.hnr != null && m.hnr < REF.hnr.ok) || (m.cpp != null && m.cpp < REF.cpp.ok);
+    const veryNoisy = (m.hnr != null && m.hnr < REF.hnr.bad) || (m.cpp != null && m.cpp < REF.cpp.bad);
+    const breathyTilt = m.h1h2 != null && m.h1h2 > 6;
+    if (noisy && breathyTilt && !irrHi) out.push({ key: 'breathy', text: 'Emissione soffiata', tone: 'warn' });
+    else if (irrHi || (irr && veryNoisy)) out.push({ key: 'hoarse2', text: 'Raucedine marcata', tone: 'bad' });
+    else if (irr || noisy) out.push({ key: 'hoarse', text: 'Leggera raucedine', tone: 'warn' });
+    if (m.h1h2 != null && m.h1h2 < -4 && m.alpha != null && m.alpha > -10 && m.db != null && m.db > -24)
+      out.push({ key: 'tense', text: 'Eccessiva tensione', tone: 'warn' });
+    if (m.sdCents != null && m.sdCents > REF.sdCents.ok) out.push({ key: 'unstable', text: 'Tono instabile', tone: 'warn' });
+    if (!out.some(o => ['breathy', 'hoarse', 'hoarse2', 'tense'].includes(o.key)))
+      out.unshift({ key: 'clean', text: 'Voce pulita', tone: 'good' });
+    return out;
+  }
+
+  return { rmsDb, yin, hnr, cpp, spectralShape, perturbation, hzToMidi, midiToHz, noteName, score, classify, REF, lin };
+})();
+if (typeof module !== 'undefined') module.exports = DSP;
+
+</script>
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('vocalis.' + k); return v ? JSON.parse(v) : d } catch { return d } },
+  set(k, v) { try { localStorage.setItem('vocalis.' + k, JSON.stringify(v)) } catch {} }
+};
+const fmt = (v, d = 1) => v == null || isNaN(v) ? '—' : v.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// ---------- impostazioni ----------
+const PRESETS = { m: { low: 48, high: 64, target: 53 }, f: { low: 57, high: 76, target: 65 } };
+let settings = Object.assign({ profile: 'm' }, PRESETS.m, store.get('settings', {}));
+function fillNotes(sel, val) {
+  sel.innerHTML = '';
+  for (let m = 36; m <= 84; m++) {
+    const o = document.createElement('option'); o.value = m;
+    o.textContent = DSP.noteName(m) + ' · ' + Math.round(DSP.midiToHz(m)) + ' Hz';
+    sel.appendChild(o);
+  }
+  sel.value = val;
+}
+function renderSettings() {
+  $('#sProfile').value = settings.profile;
+  fillNotes($('#sLow'), settings.low); fillNotes($('#sHigh'), settings.high); fillNotes($('#sTarget'), settings.target);
+}
+$('#sProfile').onchange = e => { settings = Object.assign({ profile: e.target.value }, PRESETS[e.target.value]); store.set('settings', settings); renderSettings() };
+['sLow', 'sHigh', 'sTarget'].forEach(id => $('#' + id).onchange = e => {
+  const k = { sLow: 'low', sHigh: 'high', sTarget: 'target' }[id]; settings[k] = +e.target.value;
+  if (settings.high <= settings.low + 2) settings.high = settings.low + 3;
+  store.set('settings', settings); renderSettings();
+});
+
+// ---------- esercizi ----------
+const VOWEL_TIP = { A: 'bocca aperta e rilassata', E: 'labbra distese, lingua avanti', I: 'sorriso leggero, senza stringere la gola', O: 'labbra arrotondate', U: 'labbra in avanti, suono raccolto' };
+const EX = {};
+for (const v of 'AEIOU') EX['v' + v] = { name: 'Vocale ' + v, kind: 'sustain', glyph: v, max: 25,
+  short: 'Fonazione sostenuta, ' + VOWEL_TIP[v] + '.',
+  steps: ['Inspira con calma dal naso.', `Emetti una "${v}" alla tua altezza comoda, volume di conversazione.`, 'Mantieni il suono stabile più a lungo che puoi, senza forzare il finale.', 'Quando smetti, l\'analisi parte da sola.'] };
+EX.nota = { name: 'Nota sostenuta', kind: 'sustain', target: true, max: 12, glyphSvg: 'M4 18h48',
+  short: 'Ascolta la nota di riferimento e tienila ferma per 8 secondi.',
+  steps: ['Premi Inizia: senti la nota di riferimento.', 'Dopo il conto alla rovescia intona la stessa nota su "A" o "U".', 'Resta sulla banda blu del grafico per circa 8 secondi.'] , stopAfter: 8 };
+EX.glissUp = { name: 'Glissato ascendente', kind: 'gliss', dir: 1, max: 7, glyphSvg: 'M4 24C20 24 34 4 52 4',
+  short: 'Scivola senza scalini dalla nota grave alla nota acuta.',
+  steps: ['Parti dalla nota grave impostata.', 'Sali in modo continuo, come una sirena lenta, in circa 4 secondi.', 'Segui la linea guida; niente salti né interruzioni.'] };
+EX.glissDown = { name: 'Glissato discendente', kind: 'gliss', dir: -1, max: 7, glyphSvg: 'M4 4C20 4 34 24 52 24',
+  short: 'Scendi in modo continuo dalla nota acuta alla grave.',
+  steps: ['Parti dalla nota acuta impostata, senza spingere.', 'Scendi lentamente fino alla nota grave in circa 4 secondi.', 'Mantieni il suono acceso fino in fondo.'] };
+EX.sirena = { name: 'Sirena vocale', kind: 'siren', max: 10, glyphSvg: 'M4 24C14 24 20 4 28 4S42 24 52 24',
+  short: 'Su "U" o con le labbra che vibrano: sali e ridiscendi.',
+  steps: ['Usa una "U" morbida o la vibrazione delle labbra (brrr).', 'Sali dalla nota grave fino all\'acuto in circa 3–4 secondi.', 'Ridiscendi senza interrompere il suono.'] };
+EX.free = { name: 'Ascolto libero', kind: 'free' };
+
+function lastOf(key) { const h = history.filter(r => r.ex === key); return h.length ? h[h.length - 1] : null }
+function renderGrid() {
+  const card = key => {
+    const e = EX[key], l = lastOf(key);
+    const glyph = e.glyph ? e.glyph : `<svg viewBox="0 0 56 28"><path d="${e.glyphSvg}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+    return `<button class="excard" data-ex="${key}"><span class="glyph">${glyph}</span><h3>${e.name}</h3><small>${e.short}</small>${l ? `<span class="last">ultimo: ${l.score ?? '—'}/100 · ${new Date(l.date).toLocaleDateString('it-IT')}</span>` : ''}</button>`;
+  };
+  $('#gridVowels').innerHTML = ['vA', 'vE', 'vI', 'vO', 'vU'].map(card).join('');
+  $('#gridMoves').innerHTML = ['nota', 'glissUp', 'glissDown', 'sirena'].map(card).join('');
+  document.querySelectorAll('.excard[data-ex]').forEach(b => b.onclick = () => openSession(b.dataset.ex));
+}
+
+// ---------- motore audio ----------
+const engine = {
+  ctx: null, stream: null, sr: 48000, ring: null, ringPos: 0, frames: [], t: 0, rec: null, cb: 0,
+  lastPert: null, lastShape: null, voicedRun: 0,
+  async start() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') await this.ctx.resume(); return true }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { micProblem('unsupported'); return false }
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
+    } catch (e) { micProblem(e.name); return false }
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.sr = this.ctx.sampleRate;
+    this.ring = new Float32Array(this.sr * 2); this.ringPos = 0;
+    const src = this.ctx.createMediaStreamSource(this.stream);
+    const proc = this.ctx.createScriptProcessor(2048, 1, 1);
+    const mute = this.ctx.createGain(); mute.gain.value = 0;
+    src.connect(proc); proc.connect(mute); mute.connect(this.ctx.destination);
+    proc.onaudioprocess = ev => this.onAudio(ev.inputBuffer.getChannelData(0));
+    this.proc = proc;
+    $('#micNotice').hidden = true;
+    try { await navigator.wakeLock?.request('screen') } catch {}
+    return true;
+  },
+  latest(n) {
+    const out = new Float32Array(n), L = this.ring.length;
+    let p = (this.ringPos - n + L) % L;
+    for (let i = 0; i < n; i++) { out[i] = this.ring[p]; p = (p + 1) % L }
+    return out;
+  },
+  onAudio(buf) {
+    for (let i = 0; i < buf.length; i++) { this.ring[this.ringPos] = buf[i]; this.ringPos = (this.ringPos + 1) % this.ring.length }
+    if (this.rec) this.rec.push(new Float32Array(buf));
+    this.t += buf.length / this.sr; this.cb++;
+    const f = analyzeFrame(this.latest(Math.round(this.sr * 0.064)), this.sr, this.cb % 3 === 0);
+    f.t = this.t;
+    if (f.voiced) { this.voicedRun = (this.voicedRun || 0) + buf.length / this.sr } else this.voicedRun = 0;
+    if (f.voiced && this.cb % 4 === 0 && this.voicedRun > 0.5) {
+      this.lastPert = DSP.perturbation(this.latest(Math.round(this.sr * 0.5)), this.sr, f.f0);
+    }
+    if (f.shape) this.lastShape = f.shape;
+    this.frames.push(f);
+    if (this.frames.length > 600) this.frames.splice(0, this.frames.length - 600);
+    session.onFrame?.(f);
+  }
+};
+
+function decimate2(x) { const y = new Float32Array(x.length >> 1); for (let i = 0; i < y.length; i++) y[i] = 0.5 * (x[2 * i] + x[2 * i + 1]); return y }
+// Analisi di un frame (~64 ms)
+function analyzeFrame(x, sr, heavy) {
+  const n = x.length, last = x.subarray(n - Math.min(n, Math.round(sr * 0.043)));
+  const db = DSP.rmsDb(last);
+  const f = { db, voiced: false, f0: 0 };
+  if (db < -58) return f;
+  const ds = sr >= 32000 ? 2 : 1;
+  const p = DSP.yin(ds === 2 ? decimate2(x) : x, sr / ds, 65, 1000, 0.15);
+  if (!p.f0 || p.clarity < 0.72) return f;
+  f.voiced = true; f.f0 = p.f0; f.midi = DSP.hzToMidi(p.f0); f.clarity = p.clarity;
+  f.hnr = DSP.hnr(x, sr, p.f0);
+  if (heavy) {
+    const w = x.subarray(n - Math.min(n, 2048));
+    f.cpp = DSP.cpp(w, sr).cpp;
+    f.shape = DSP.spectralShape(x, sr, p.f0);
+  }
+  return f;
+}
+
+function micProblem(kind) {
+  const el = $('#micNotice'); el.hidden = false;
+  let framed = false; try { framed = window.self !== window.top } catch { framed = true }
+  if (framed) {
+    el.innerHTML = '<b>Il microfono è bloccato in questa anteprima.</b> Stai vedendo Vocalis dentro un\'altra pagina, che non lascia passare il microfono. Scarica il file vocalis.html e aprilo direttamente nel browser (doppio clic sul file dal computer). Nel frattempo puoi analizzare un file audio registrato.';
+    return;
+  }
+  if (kind === 'NotAllowedError' || kind === 'SecurityError')
+    el.innerHTML = '<b>Microfono non autorizzato.</b> Consenti l\'accesso al microfono dalle impostazioni del browser (icona a sinistra dell\'indirizzo) e ricarica la pagina.';
+  else if (kind === 'NotFoundError')
+    el.innerHTML = '<b>Nessun microfono trovato.</b> Collega un microfono o usa il telefono.';
+  else
+    el.innerHTML = '<b>Il microfono non è disponibile qui.</b> Apri Vocalis in Chrome, Edge o Firefox da un indirizzo https (oppure con doppio clic sul file dal computer). Puoi comunque analizzare un file audio registrato.';
+}
+
+// ---------- analisi di una registrazione completa ----------
+function concat(chunks) { let n = 0; for (const c of chunks) n += c.length; const o = new Float32Array(n); let p = 0; for (const c of chunks) { o.set(c, p); p += c.length } return o }
+const median = a => { const b = a.filter(v => v != null && isFinite(v)).sort((p, q) => p - q); return b.length ? b[Math.floor(b.length / 2)] : null };
+
+function framesOf(x, sr) {
+  const hop = Math.round(sr * 0.02), win = Math.round(sr * 0.064), out = [];
+  for (let s = 0, k = 0; s + win <= x.length; s += hop, k++) {
+    const f = analyzeFrame(x.subarray(s, s + win), sr, k % 3 === 0);
+    f.t = (s + win) / sr; f.s = s; out.push(f);
+  }
+  return { frames: out, hop };
+}
+// sequenze sonore consecutive, tollerando piccole pause
+function runs(frames, gap) {
+  const out = []; let cur = null, miss = 0;
+  frames.forEach((f, i) => {
+    if (f.voiced) { if (!cur) cur = { a: i, b: i, breaks: 0 }; else if (miss) cur.breaks += miss >= 4 ? 1 : 0; cur.b = i; miss = 0 }
+    else if (cur) { miss++; if (miss > gap) { out.push(cur); cur = null; miss = 0 } }
+  });
+  if (cur) out.push(cur);
+  return out;
+}
+
+function analyzeTake(x, sr, key) {
+  const ex = EX[key] || EX.vA, kind = ex.kind;
+  const { frames, hop } = framesOf(x, sr);
+  const dt = hop / sr;
+  const rs = runs(frames, kind === 'sustain' ? 3 : 8);
+  if (!rs.length) return { error: 'Non ho rilevato voce. Avvicinati al microfono e riprova.' };
+  const run = rs.reduce((a, b) => (b.b - b.a > a.b - a.a ? b : a));
+  const dur = (run.b - run.a + 1) * dt;
+  if (dur < 0.6) return { error: 'Il suono è troppo breve per essere analizzato: tienilo almeno 2 secondi.' };
+  let a = run.a, b = run.b;
+  if (kind === 'sustain' && dur > 1.5) { const trim = Math.round(0.25 / dt); a += trim; b -= trim }
+  const reg = frames.slice(a, b + 1).filter(f => f.voiced);
+  const m = { kind, mpt: dur, frames: frames.map(f => [ +f.t.toFixed(3), f.voiced ? +f.midi.toFixed(2) : null, f.hnr != null ? +f.hnr.toFixed(1) : null ]) };
+  m.hnr = median(reg.map(f => f.hnr));
+  m.cpp = median(reg.map(f => f.cpp));
+  m.h1h2 = median(reg.map(f => f.shape?.h1h2));
+  m.alpha = median(reg.map(f => f.shape?.alpha));
+  m.db = 10 * Math.log10(reg.reduce((s, f) => s + Math.pow(10, f.db / 10), 0) / reg.length);
+  const mids = reg.map(f => f.midi);
+  m.f0 = median(reg.map(f => f.f0)); m.midi = DSP.hzToMidi(m.f0);
+  if (kind === 'sustain') {
+    // stabilità: deviazione standard in cent dopo aver tolto la deriva lineare
+    const n = mids.length, xs = mids.map((_, i) => i);
+    const mx = (n - 1) / 2, my = mids.reduce((s, v) => s + v, 0) / n;
+    let sxy = 0, sxx = 0; for (let i = 0; i < n; i++) { sxy += (i - mx) * (mids[i] - my); sxx += (i - mx) ** 2 }
+    const sl = sxx ? sxy / sxx : 0;
+    let ss = 0; for (let i = 0; i < n; i++) ss += (mids[i] - (my + sl * (i - mx))) ** 2;
+    m.sdCents = 100 * Math.sqrt(ss / Math.max(1, n - 1));
+    m.driftCents = 100 * sl * (n - 1);
+    // jitter / shimmer su blocchi di 0,5 s
+    const s0 = frames[a].s, s1 = frames[b].s + Math.round(sr * 0.064), blk = Math.round(sr * 0.5);
+    let wj = 0, ws = 0, wc = 0;
+    for (let s = s0; s + blk <= s1; s += blk) {
+      const fr = frames.filter(f => f.s >= s && f.s < s + blk && f.voiced).map(f => f.f0);
+      const f0 = median(fr); if (!f0) continue;
+      const p = DSP.perturbation(x.subarray(s, s + blk), sr, f0);
+      if (p) { wj += p.jitter * p.cycles; ws += p.shimmer * p.cycles; wc += p.cycles }
+    }
+    if (wc) { m.jitter = wj / wc; m.shimmer = ws / wc }
+    if (ex.target) m.targetCents = 100 * (m.midi - settings.target);
+  } else {
+    const sorted = [...mids].sort((p, q) => p - q);
+    const p5 = sorted[Math.floor(sorted.length * 0.05)], p95 = sorted[Math.floor(sorted.length * 0.95)];
+    m.rangeSt = p95 - p5; m.lowMidi = p5; m.highMidi = p95;
+    const seg = frames.slice(run.a, run.b + 1);
+    let jumps = 0, pairs = 0;
+    for (let i = 1; i < seg.length; i++) if (seg[i].voiced && seg[i - 1].voiced) { pairs++; if (Math.abs(seg[i].midi - seg[i - 1].midi) > 0.9) jumps++ }
+    m.breaks = run.breaks; m.jumps = jumps;
+    m.smooth = Math.max(0, 1 - (pairs ? jumps / pairs : 0) * 10 - run.breaks * 0.15);
+    if (kind === 'gliss') {
+      const n = mids.length, half = Math.floor(n / 2);
+      const first = median(mids.slice(0, Math.max(1, Math.floor(n * 0.15)))), lastv = median(mids.slice(Math.floor(n * 0.85)));
+      m.dirOk = Math.sign(lastv - first) === ex.dir;
+    }
+    if (kind === 'siren') {
+      let pk = 0; mids.forEach((v, i) => { if (v > mids[pk]) pk = i });
+      m.dirOk = pk > mids.length * 0.2 && pk < mids.length * 0.8;
+    }
+  }
+  m.score = DSP.score(m, kind === 'sustain' ? 'sustain' : 'move');
+  m.labels = DSP.classify(kind === 'sustain' ? m : Object.assign({}, m, { sdCents: null }));
+  if (m.labels.some(l => l.key === 'tense') && m.score != null) m.score = Math.max(0, m.score - 8);
+  if (kind === 'sustain' && !ex.target && m.mpt < 8) m.labels.push({ key: 'short', text: 'Fonazione breve', tone: 'warn' });
+  if (kind !== 'sustain') {
+    if (m.breaks > 0 || m.jumps > 2) m.labels.push({ key: 'breaks', text: 'Salti o interruzioni', tone: 'warn' });
+    if (m.rangeSt < 7) m.labels.push({ key: 'range', text: 'Escursione limitata', tone: 'warn' });
+    if (m.dirOk === false) m.labels.push({ key: 'dir', text: 'Direzione non rispettata', tone: 'warn' });
+  }
+  if (ex.target && Math.abs(m.targetCents) > 50) m.labels.push({ key: 'off', text: 'Nota diversa dal target', tone: 'warn' });
+  return m;
+}
+
+// ---------- disegno del grafico del pitch ----------
+function sizeCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
+  const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { g, w: r.width, h: r.height };
+}
+function hnrColor(h) { return h == null ? css('--muted') : h >= 20 ? css('--good') : h >= 12 ? css('--warn') : css('--bad') }
+function drawPitch(cv, pts, opts) {
+  // pts: [t, midi|null, hnr]; opts: {t0, t1, lo, hi, guide: fn(t)->midi|null, band}
+  const { g, w, h } = sizeCanvas(cv);
+  const padL = 46, padR = 8, padT = 8, padB = 18;
+  const X = t => padL + (t - opts.t0) / (opts.t1 - opts.t0) * (w - padL - padR);
+  const Y = m => padT + (opts.hi - m) / (opts.hi - opts.lo) * (h - padT - padB);
+  g.clearRect(0, 0, w, h);
+  g.font = '10px ' + css('--f-mono'); g.textBaseline = 'middle';
+  const line = css('--line'), muted = css('--muted');
+  for (let m = Math.ceil(opts.lo); m <= Math.floor(opts.hi); m++) {
+    const pc = ((m % 12) + 12) % 12, natural = [0, 2, 4, 5, 7, 9, 11].includes(pc);
+    const step = (opts.hi - opts.lo) > 24 ? (pc === 0 || pc === 7) : natural;
+    g.strokeStyle = line; g.globalAlpha = pc === 0 ? 1 : natural ? .6 : .25; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(padL, Y(m) + .5); g.lineTo(w - padR, Y(m) + .5); g.stroke();
+    g.globalAlpha = 1;
+    if (step) { g.fillStyle = muted; g.fillText(DSP.noteName(m), 4, Y(m)) }
+  }
+  // asse tempo
+  g.fillStyle = muted; g.textBaseline = 'alphabetic';
+  const span = opts.t1 - opts.t0, stepT = span > 12 ? 4 : span > 5 ? 2 : 1;
+  for (let s = Math.ceil(opts.t0 / stepT) * stepT; s <= opts.t1; s += stepT) {
+    const lbl = opts.rel ? (s - opts.t0).toFixed(0) + ' s' : '';
+    if (lbl) g.fillText(lbl, X(s) - 8, h - 4);
+  }
+  if (opts.guide) {
+    g.strokeStyle = css('--accent'); g.globalAlpha = .9; g.lineWidth = opts.band ? 1 : 2; g.setLineDash([6, 5]);
+    g.beginPath(); let started = false;
+    for (let t = opts.t0; t <= opts.t1; t += span / 120) {
+      const m = opts.guide(t); if (m == null) { started = false; continue }
+      if (!started) { g.moveTo(X(t), Y(m)); started = true } else g.lineTo(X(t), Y(m));
+    }
+    g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    if (opts.band) {
+      const m = opts.guide(opts.t1); if (m != null) { g.fillStyle = css('--accent'); g.globalAlpha = .12; g.fillRect(padL, Y(m + .25), w - padL - padR, Y(m - .25) - Y(m + .25)); g.globalAlpha = 1 }
+    }
+  }
+  g.lineWidth = 3; g.lineCap = 'round';
+  for (let i = 1; i < pts.length; i++) {
+    const p = pts[i - 1], q = pts[i];
+    if (p[1] == null || q[1] == null || q[0] < opts.t0 || Math.abs(q[1] - p[1]) > 2) continue;
+    g.strokeStyle = hnrColor(q[2]);
+    g.beginPath(); g.moveTo(X(p[0]), Y(p[1])); g.lineTo(X(q[0]), Y(q[1])); g.stroke();
+  }
+}
+
+// ---------- sessione ----------
+const session = { key: null, state: 'idle', onFrame: null };
+let rolling = [];
+function guideFor(key, t0) {
+  const ex = EX[key]; if (!ex) return null;
+  const L = settings.low, H = settings.high;
+  if (ex.target) return () => settings.target;
+  if (ex.kind === 'gliss') { const d = 4; return t => { const u = (t - t0) / d; if (u < 0 || u > 1.05) return null; const k = Math.min(1, u); return ex.dir > 0 ? L + (H - L) * k : H - (H - L) * k } }
+  if (ex.kind === 'siren') { const d = 7; return t => { const u = (t - t0) / d; if (u < 0 || u > 1) return null; return L + (H - L) * (u < .5 ? u * 2 : 2 - u * 2) } }
+  return null;
+}
+
+function openSession(key) {
+  session.key = key; session.state = 'idle'; session.done = false; session.review = null;
+  const ex = EX[key];
+  showView('sessione');
+  $('#btnBack').textContent = key === 'free' ? '← Esercizi' : '← Tutti gli esercizi';
+  $('#exResult').hidden = true;
+  $('#legTarget').hidden = !(ex.target || ex.kind === 'gliss' || ex.kind === 'siren');
+  renderInfo();
+  engine.start().then(ok => { if (ok) { startLive(); if (key === 'free') setChips([{ text: 'In ascolto', tone: '' }]) } });
+}
+function renderInfo(extra) {
+  const ex = EX[session.key];
+  if (session.key === 'free') {
+    $('#exInfo').innerHTML = `<h2>Ascolto libero</h2><p class="muted" style="margin-top:6px">Vocalizza come vuoi: nota, intonazione, intensità e qualità si aggiornano mentre canti. I valori di jitter e shimmer sono affidabili solo su note tenute.</p>`;
+    return;
+  }
+  const tgt = ex.target ? `<p style="margin-top:8px">Nota target: <b class="mono">${DSP.noteName(settings.target)} · ${fmt(DSP.midiToHz(settings.target), 0)} Hz</b></p>` : '';
+  const rng = (ex.kind === 'gliss' || ex.kind === 'siren') ? `<p style="margin-top:8px">Estensione: <b class="mono">${DSP.noteName(settings.low)} → ${DSP.noteName(settings.high)}</b></p>` : '';
+  const recording = session.state === 'rec' || session.state === 'count';
+  $('#exInfo').innerHTML = `<div class="label">${ex.kind === 'sustain' ? (ex.target ? 'Intonazione' : 'Vocale sostenuta') : 'Agilità'}</div>
+    <h2 style="margin-top:2px">${ex.name}</h2>${tgt}${rng}
+    <ol class="steps" style="margin-top:10px">${ex.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <div class="btnrow" style="margin-top:14px;align-items:center">
+      ${recording ? `<button class="btn stop big" id="btnStop">Stop</button><span class="timer" id="timer">0,0 s</span>`
+        : `<button class="btn primary big" id="btnStart">${session.done ? 'Ripeti' : 'Inizia'}</button>${ex.target ? '<button class="btn" id="btnTone">Ascolta la nota</button>' : ''}`}
+    </div>`;
+  $('#btnStart') && ($('#btnStart').onclick = startExercise);
+  $('#btnStop') && ($('#btnStop').onclick = () => finishExercise());
+  $('#btnTone') && ($('#btnTone').onclick = () => playTone(settings.target, 1.6));
+}
+$('#btnBack').onclick = () => { stopRec(); session.key = null; showView('esercizi'); renderGrid() };
+
+function playTone(midi, dur) {
+  if (!engine.ctx) return Promise.resolve();
+  const c = engine.ctx, o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(), g2 = c.createGain();
+  o.type = 'triangle'; o.frequency.value = DSP.midiToHz(midi); o2.frequency.value = DSP.midiToHz(midi) * 2; g2.gain.value = .25;
+  const t = c.currentTime;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .05); g.gain.setValueAtTime(.22, t + dur - .15); g.gain.linearRampToValueAtTime(0, t + dur);
+  o.connect(g); o2.connect(g2); g2.connect(g); g.connect(c.destination);
+  o.start(t); o2.start(t); o.stop(t + dur); o2.stop(t + dur);
+  return new Promise(r => setTimeout(r, dur * 1000 + 150));
+}
+function beep(f = 880, d = .09) {
+  if (!engine.ctx) return; const c = engine.ctx, o = c.createOscillator(), g = c.createGain();
+  o.frequency.value = f; g.gain.value = .12; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + d);
+}
+
+async function startExercise() {
+  const ok = await engine.start(); if (!ok) return;
+  const ex = EX[session.key];
+  session.state = 'count'; session.done = false; $('#exResult').hidden = true; renderInfo();
+  if (ex.target) await playTone(settings.target, 1.6);
+  const cd = $('#countdown'); cd.hidden = false;
+  for (const n of [3, 2, 1]) { if (session.state !== 'count') { cd.hidden = true; return } cd.textContent = n; beep(n === 1 ? 1320 : 880); await new Promise(r => setTimeout(r, 700)) }
+  cd.hidden = true;
+  if (session.state !== 'count') return;
+  session.state = 'rec'; renderInfo();
+  engine.rec = []; session.t0 = engine.t; session.voicedSeen = 0; session.silence = 0;
+  session.guide = guideFor(session.key, engine.t);
+  session.onFrame = f => {
+    const el = $('#timer'); const t = engine.t - session.t0;
+    if (el) el.textContent = fmt(t, 1) + ' s';
+    if (f.voiced) { session.voicedSeen += 2048 / engine.sr; session.silence = 0 } else session.silence += 2048 / engine.sr;
+    const stopAfter = ex.stopAfter;
+    if (stopAfter && session.voicedSeen >= stopAfter) return finishExercise();
+    if (session.voicedSeen > 1 && session.silence > 0.7) return finishExercise();
+    if (t > ex.max) return finishExercise();
+    if (!session.voicedSeen && t > 6) return finishExercise();
+  };
+}
+function stopRec() { engine.rec = null; session.onFrame = null; session.guide = null; if (session.state === 'count') session.state = 'idle' }
+function finishExercise() {
+  if (session.state !== 'rec') return;
+  session.state = 'busy'; session.onFrame = null;
+  const chunks = engine.rec || []; engine.rec = null;
+  const x = concat(chunks), sr = engine.sr;
+  $('#exResult').hidden = false; $('#exResult').innerHTML = '<p class="muted">Analisi in corso…</p>';
+  setTimeout(() => {
+    const m = analyzeTake(x, sr, session.key);
+    session.state = 'idle'; session.done = true; session.guide = null;
+    renderInfo(); showResult(m, session.key, true);
+  }, 30);
+}
+
+// ---------- esito ----------
+function status(v, good, bad, higherBetter) {
+  if (v == null || isNaN(v)) return '';
+  if (higherBetter) return v >= good ? 'good' : v >= bad ? 'warn' : 'bad';
+  return v <= good ? 'good' : v <= bad ? 'warn' : 'bad';
+}
+const R = DSP.REF;
+function metricRows(m) {
+  const rows = [];
+  rows.push(['Nota media', m.f0 ? `${DSP.noteName(m.midi)} · ${fmt(m.f0, 0)} Hz` : '—', '', '']);
+  if (m.kind === 'sustain') {
+    rows.push(['Tempo di fonazione', fmt(m.mpt, 1) + ' s', '≥ 10 s', status(m.mpt, 10, 6, true)]);
+    rows.push(['Stabilità del tono', fmt(m.sdCents, 0) + ' cent', '≤ 20', status(m.sdCents, R.sdCents.ok, R.sdCents.bad)]);
+    if (m.targetCents != null) rows.push(['Scarto dal target', (m.targetCents > 0 ? '+' : '') + fmt(m.targetCents, 0) + ' cent', '± 25', status(Math.abs(m.targetCents), 25, 50)]);
+    rows.push(['Jitter locale', fmt(m.jitter, 2) + ' %', '< 1,04', status(m.jitter, R.jitter.ok, R.jitter.bad)]);
+    rows.push(['Shimmer locale', fmt(m.shimmer, 2) + ' %', '< 3,81', status(m.shimmer, R.shimmer.ok, R.shimmer.bad)]);
+  } else {
+    rows.push(['Estensione', `${fmt(m.rangeSt, 1)} st (${DSP.noteName(m.lowMidi)}–${DSP.noteName(m.highMidi)})`, '≥ 12 st', status(m.rangeSt, 12, 7, true)]);
+    rows.push(['Fluidità', fmt(100 * m.smooth, 0) + ' %', '≥ 90', status(100 * m.smooth, 90, 60, true)]);
+    rows.push(['Interruzioni', String(m.breaks), '0', m.breaks ? 'warn' : 'good']);
+  }
+  rows.push(['HNR', fmt(m.hnr, 1) + ' dB', '≥ 20', status(m.hnr, R.hnr.ok, R.hnr.bad, true)]);
+  rows.push(['CPP', fmt(m.cpp, 1) + ' dB', '≥ ' + R.cpp.ok, status(m.cpp, R.cpp.ok, R.cpp.bad, true)]);
+  rows.push(['H1–H2', fmt(m.h1h2, 1) + ' dB', '−4 … +6', m.h1h2 == null ? '' : m.h1h2 > 6 || m.h1h2 < -4 ? 'warn' : 'good']);
+  rows.push(['Intensità', fmt(m.db, 0) + ' dBFS', '−48 … −6', status(Math.abs(m.db + 27), 21, 30)]);
+  return rows;
+}
+const TIPS = {
+  breathy: 'Il suono porta con sé molta aria: prova a "chiudere" il suono partendo da una "m" a bocca chiusa (mmm-A) e cerca un attacco morbido ma netto.',
+  hoarse: 'Leggera irregolarità: bevi un sorso d\'acqua, abbassa un po\' il volume e ripeti su una nota più comoda.',
+  hoarse2: 'Irregolarità e rumore evidenti: riduci intensità e durata degli esercizi, idrata e riposa la voce. Se persiste da settimane, parlane con il foniatra.',
+  tense: 'Le armoniche acute dominano e il volume è alto: rilascia mandibola e spalle, abbassa un poco il volume, prova lo stesso esercizio con la vibrazione delle labbra.',
+  unstable: 'Il tono oscilla: appoggia il fiato in modo costante (immagina di espirare lentamente in una cannuccia) e scegli una nota più comoda.',
+  short: 'Fonazione sotto gli 8 secondi: lavora sull\'inspirazione profonda e sulla gestione del fiato prima di aumentare la durata.',
+  breaks: 'Ci sono salti o interruzioni: rallenta il glissato e prova con la "U" o con le labbra che vibrano, che stabilizzano il passaggio di registro.',
+  range: 'Escursione limitata: allarga gradualmente di un semitono alla volta le note grave e acuta nelle impostazioni.',
+  low: 'Volume molto basso: avvicinati al microfono o aumenta leggermente l\'intensità.',
+  high: 'Volume molto alto o microfono troppo vicino: allontanati e riduci la spinta.',
+  off: 'La nota emessa è lontana dal target: riascolta la nota di riferimento prima di partire.',
+  dir: 'Il percorso del pitch non segue la direzione richiesta: segui la linea guida tratteggiata.',
+  clean: 'Emissione regolare e armonica. Mantieni queste condizioni e prova ad allungare la durata o ad allargare l\'estensione.'
+};
+function ringSvg(score) {
+  const s = score ?? 0, C = 2 * Math.PI * 40, col = s >= 75 ? 'var(--good)' : s >= 50 ? 'var(--warn)' : 'var(--bad)';
+  return `<svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--sunk)" stroke-width="10"/>
+    <circle cx="50" cy="50" r="40" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * s / 100} ${C}" transform="rotate(-90 50 50)"/>
+    <text x="50" y="55" text-anchor="middle" font-size="26" fill="var(--ink)">${score ?? '—'}</text><text x="50" y="72" text-anchor="middle" font-size="9" fill="var(--muted)">/100</text></svg>`;
+}
+function showResult(m, key, save) {
+  const box = $('#exResult'); box.hidden = false;
+  if (m.error) { box.innerHTML = `<h3>Nessuna misura</h3><p class="muted">${m.error}</p>`; return }
+  const quality = m.score >= 75 ? 'Buona qualità vocale' : m.score >= 50 ? 'Qualità discreta' : 'Qualità da migliorare';
+  const tips = [...new Set(m.labels.map(l => l.key))].filter(k => TIPS[k]).slice(0, 3).map(k => `<li>${TIPS[k]}</li>`).join('');
+  box.innerHTML = `<div class="scorebox">${ringSvg(m.score)}<div><div class="label">Punteggio qualità vocale</div><h2>${quality}</h2><p class="muted" style="font-size:.86rem">${EX[key]?.name ?? 'Registrazione'} · ${new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</p></div></div>
+    <div class="chips">${m.labels.map(l => `<span class="chip ${l.tone}">${l.text}</span>`).join('')}</div>
+    <table class="mt">${metricRows(m).map(r => `<tr><td><span class="dot ${r[3]}"></span>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
+    <div><div class="label" style="margin-bottom:4px">Cosa fare</div><ul class="tips">${tips}</ul></div>`;
+  // ridisegna il grafico con la ripresa completa
+  const pts = m.frames, t0 = pts[0]?.[0] ?? 0, t1 = pts[pts.length - 1]?.[0] ?? 1;
+  session.review = { pts, t0, t1, guide: guideFor(key, t0) };
+  if (save) {
+    const rec = { id: Date.now().toString(36), date: new Date().toISOString(), ex: key, score: m.score,
+      m: pick(m, ['mpt', 'f0', 'sdCents', 'targetCents', 'jitter', 'shimmer', 'hnr', 'cpp', 'h1h2', 'alpha', 'db', 'rangeSt', 'breaks', 'smooth']),
+      labels: m.labels.map(l => l.text) };
+    history.push(rec); store.set('history', history);
+  }
+}
+function pick(o, ks) { const r = {}; for (const k of ks) if (o[k] != null && isFinite(o[k])) r[k] = +(+o[k]).toFixed(3); return r }
+
+// ---------- ciclo di disegno live ----------
+let raf = 0, lastLabel = 0;
+function startLive() {
+  cancelAnimationFrame(raf);
+  const loop = () => { raf = requestAnimationFrame(loop); drawLive() };
+  loop();
+}
+function setChips(list) { $('#liveChips').innerHTML = list.map(l => `<span class="chip ${l.tone || ''}">${l.text}</span>`).join('') }
+function drawLive() {
+  if ($('#v-sessione').hidden) return;
+  const fr = engine.frames, last = fr[fr.length - 1];
+  const cv = $('#plot');
+  if (session.review && session.state === 'idle' && session.done) {
+    const r = session.review;
+    const mids = r.pts.map(p => p[1]).filter(v => v != null);
+    let lo = Math.min(settings.low, ...mids) - 2, hi = Math.max(settings.high, ...mids) + 2;
+    if (!EX[session.key]?.target && EX[session.key]?.kind === 'sustain') { const md = median(mids) ?? 57; lo = md - 6; hi = md + 6 }
+    drawPitch(cv, r.pts, { t0: r.t0, t1: r.t1 + .2, lo, hi, guide: r.guide, band: EX[session.key]?.target, rel: true });
+  } else {
+    const now = engine.t, t0 = now - 8;
+    const pts = fr.filter(f => f.t >= t0 - .1).map(f => [f.t, f.voiced ? f.midi : null, f.hnr]);
+    const ex = EX[session.key] || {};
+    let lo = settings.low - 4, hi = settings.high + 4;
+    if (ex.kind === 'sustain' || ex.kind === 'free') {
+      const mids = pts.map(p => p[1]).filter(v => v != null);
+      const c = ex.target ? settings.target : (mids.length ? median(mids) : (settings.low + settings.high) / 2);
+      if (ex.kind === 'free') { lo = Math.min(settings.low - 4, ...mids.map(v => v - 2)); hi = Math.max(settings.high + 4, ...mids.map(v => v + 2)) }
+      else { lo = c - 7; hi = c + 7 }
+    }
+    drawPitch(cv, pts, { t0, t1: now, lo, hi, guide: session.guide, band: ex.target });
+  }
+  if (!last) return;
+  // lettura nota
+  const voiced = last.voiced && last.clarity > .75;
+  const nEl = $('#rNote');
+  if (voiced) {
+    const r = Math.round(last.midi), c = (last.midi - r) * 100;
+    nEl.textContent = DSP.noteName(r); nEl.classList.remove('off');
+    $('#rHz').textContent = fmt(last.f0, 1) + ' Hz';
+    let dev = c, label = 'Intonazione';
+    if (EX[session.key]?.target) { dev = (last.midi - settings.target) * 100; label = 'Scarto dal target ' + DSP.noteName(settings.target) }
+    $('#rCentsLabel').textContent = label + ': ' + (dev > 0 ? '+' : '') + Math.round(dev) + ' cent';
+    $('#rNeedle').style.left = (50 + Math.max(-50, Math.min(50, dev))) + '%';
+  } else { nEl.classList.add('off') }
+  $('#rMeter').style.width = Math.max(0, Math.min(100, (last.db + 60) / 60 * 100)) + '%';
+  // metriche rolling (ultimo secondo)
+  const win = fr.filter(f => f.t > engine.t - 1 && f.voiced);
+  const lm = { hnr: median(win.map(f => f.hnr)), cpp: median(win.map(f => f.cpp)), db: win.length ? median(win.map(f => f.db)) : last.db,
+    jitter: engine.lastPert?.jitter, shimmer: engine.lastPert?.shimmer, h1h2: engine.lastShape?.h1h2, alpha: engine.lastShape?.alpha };
+  const mids = win.map(f => f.midi);
+  if (mids.length > 8) { const mu = mids.reduce((s, v) => s + v, 0) / mids.length; lm.sd = 100 * Math.sqrt(mids.reduce((s, v) => s + (v - mu) ** 2, 0) / mids.length) }
+  const stale = !win.length || engine.voicedRun < .5;
+  $('#liveMetrics').innerHTML = [
+    ['Jitter', stale ? null : lm.jitter, 2, '%', status(lm.jitter, R.jitter.ok, R.jitter.bad)],
+    ['Shimmer', stale ? null : lm.shimmer, 2, '%', status(lm.shimmer, R.shimmer.ok, R.shimmer.bad)],
+    ['HNR', lm.hnr, 1, 'dB', status(lm.hnr, R.hnr.ok, R.hnr.bad, true)],
+    ['CPP', lm.cpp, 1, 'dB', status(lm.cpp, R.cpp.ok, R.cpp.bad, true)],
+    ['Stabilità', lm.sd, 0, 'cent', status(lm.sd, R.sdCents.ok, R.sdCents.bad)],
+    ['Intensità', last.db > -90 ? last.db : null, 0, 'dBFS', status(Math.abs(last.db + 27), 21, 30)]
+  ].map(([n, v, d, u, s]) => `<div class="metric ${v == null ? '' : s}"><span>${n}</span><b>${fmt(v, d)}</b><span>${u}</span></div>`).join('');
+  // etichette ogni 0,5 s
+  if (performance.now() - lastLabel > 500) {
+    lastLabel = performance.now();
+    if (session.state === 'count') setChips([{ text: 'Preparati…' }]);
+    else if (win.length < 10) setChips([{ text: session.state === 'rec' ? 'Registrazione: emetti il suono' : 'In ascolto' }]);
+    else {
+      const sustainLike = EX[session.key]?.kind === 'sustain';
+      const labels = DSP.classify({ ...lm, jitter: stale ? null : lm.jitter, shimmer: stale ? null : lm.shimmer, sdCents: sustainLike ? lm.sd : null });
+      setChips(labels.slice(0, 3));
+    }
+  }
+}
+
+// ---------- file audio ----------
+$('#fileIn').onchange = async e => {
+  const file = e.target.files[0]; if (!file) return;
+  e.target.value = '';
+  session.key = 'vA'; showView('sessione'); renderInfoFile(file.name); setChips([{ text: 'Analisi del file' }]);
+  $('#exResult').hidden = false; $('#exResult').innerHTML = '<p class="muted">Decodifica e analisi in corso…</p>';
+  try {
+    const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, 44100);
+    const ab = await file.arrayBuffer();
+    const buf = await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej) });
+    let x = buf.getChannelData(0);
+    if (buf.numberOfChannels > 1) { const y = buf.getChannelData(1), z = new Float32Array(x.length); for (let i = 0; i < x.length; i++) z[i] = (x[i] + y[i]) / 2; x = z }
+    const kind = 'vA';
+    session.key = kind;
+    const m = analyzeTake(x, buf.sampleRate, kind);
+    session.state = 'idle'; session.done = true;
+    showResult(m, kind, true);
+    startLive();
+  } catch (err) { $('#exResult').innerHTML = '<h3>File non leggibile</h3><p class="muted">Il browser non riesce a decodificare questo formato. Prova con WAV o MP3.</p>' }
+};
+function renderInfoFile(name) {
+  $('#exInfo').innerHTML = `<div class="label">Registrazione</div><h2 style="margin-top:2px">${name.replace(/[<>&]/g, '')}</h2><p class="muted" style="margin-top:6px">Analizzata come vocale sostenuta. Il referto viene salvato nei progressi come "Vocale A".</p>`;
+}
+
+// ---------- progressi ----------
+let history = store.get('history', []);
+function renderProgress() {
+  const sel = $('#pEx'), cur = sel.value || 'all';
+  const keys = [...new Set(history.map(r => r.ex))];
+  sel.innerHTML = '<option value="all">Tutti</option>' + keys.map(k => `<option value="${k}">${EX[k]?.name ?? k}</option>`).join('');
+  sel.value = keys.includes(cur) ? cur : 'all';
+  const rows = history.filter(r => sel.value === 'all' || r.ex === sel.value);
+  drawTrend(rows, $('#pMetric').value);
+  if (!history.length) { $('#histTable').innerHTML = '<div class="empty">Nessuna sessione ancora. Completa un esercizio e il risultato comparirà qui.</div>'; return }
+  $('#histTable').innerHTML = `<table class="hist"><thead><tr><th>Data</th><th>Esercizio</th><th style="text-align:right">Punti</th><th style="text-align:right">HNR</th><th style="text-align:right">CPP</th><th style="text-align:right">Jitter</th><th style="text-align:right">Shimmer</th><th style="text-align:right">Durata</th><th>Esito</th><th></th></tr></thead><tbody>
+  ${[...rows].reverse().map(r => `<tr><td>${new Date(r.date).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${EX[r.ex]?.name ?? r.ex}</td>
+    <td class="n"><b>${r.score ?? '—'}</b></td><td class="n">${fmt(r.m.hnr, 1)}</td><td class="n">${fmt(r.m.cpp, 1)}</td><td class="n">${fmt(r.m.jitter, 2)}</td><td class="n">${fmt(r.m.shimmer, 2)}</td><td class="n">${r.m.mpt != null ? fmt(r.m.mpt, 1) + ' s' : '—'}</td>
+    <td>${(r.labels || []).join(', ')}</td><td><button class="btn ghost" data-del="${r.id}" aria-label="Elimina sessione">Elimina</button></td></tr>`).join('')}</tbody></table>`;
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    if (b.dataset.armed) { history = history.filter(r => r.id !== b.dataset.del); store.set('history', history); renderProgress() }
+    else { b.dataset.armed = 1; b.textContent = 'Conferma'; b.classList.remove('ghost'); setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Elimina'; b.classList.add('ghost') } }, 3000) }
+  });
+}
+function drawTrend(rows, key) {
+  const cv = $('#trend'), { g, w, h } = sizeCanvas(cv);
+  g.clearRect(0, 0, w, h);
+  const pts = rows.map(r => ({ d: new Date(r.date).getTime(), v: key === 'score' ? r.score : r.m[key] })).filter(p => p.v != null);
+  const muted = css('--muted'), line = css('--line'), acc = css('--accent');
+  g.font = '11px ' + css('--f-mono'); g.fillStyle = muted;
+  if (pts.length < 1) { g.textAlign = 'center'; g.fillText('Ancora nessun dato per questo valore', w / 2, h / 2); g.textAlign = 'left'; return }
+  const padL = 40, padR = 14, padT = 12, padB = 24;
+  let lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
+  if (key === 'score') { lo = 0; hi = 100 } else { const m = (hi - lo) * .15 || Math.abs(hi) * .1 || 1; lo -= m; hi += m }
+  const X = i => pts.length === 1 ? (padL + w - padR) / 2 : padL + i / (pts.length - 1) * (w - padL - padR);
+  const Y = v => padT + (hi - v) / (hi - lo) * (h - padT - padB);
+  g.textBaseline = 'middle';
+  for (let k = 0; k <= 4; k++) {
+    const v = lo + (hi - lo) * k / 4; g.strokeStyle = line; g.beginPath(); g.moveTo(padL, Y(v) + .5); g.lineTo(w - padR, Y(v) + .5); g.stroke();
+    g.fillText(fmt(v, key === 'jitter' || key === 'shimmer' ? 1 : 0), 4, Y(v));
+  }
+  g.textBaseline = 'alphabetic';
+  const every = Math.ceil(pts.length / Math.max(1, Math.floor((w - padL) / 70)));
+  pts.forEach((p, i) => { if (i % every === 0) g.fillText(new Date(p.d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }), X(i) - 14, h - 6) });
+  g.globalAlpha = .12; g.fillStyle = acc; g.beginPath(); g.moveTo(X(0), Y(lo));
+  pts.forEach((p, i) => g.lineTo(X(i), Y(p.v))); g.lineTo(X(pts.length - 1), Y(lo)); g.closePath(); g.fill(); g.globalAlpha = 1;
+  g.strokeStyle = acc; g.lineWidth = 2; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(i), Y(p.v)) : g.moveTo(X(i), Y(p.v))); g.stroke();
+  pts.forEach((p, i) => { g.fillStyle = i === pts.length - 1 ? acc : css('--surface'); g.strokeStyle = acc; g.lineWidth = 2; g.beginPath(); g.arc(X(i), Y(p.v), i === pts.length - 1 ? 5 : 3.5, 0, 7); g.fill(); g.stroke() });
+}
+$('#pEx').onchange = renderProgress; $('#pMetric').onchange = renderProgress;
+$('#btnExport').onclick = () => {
+  const blob = new Blob([JSON.stringify({ app: 'vocalis', version: 1, settings, history }, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vocalis-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$('#impIn').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = '';
+  try {
+    const d = JSON.parse(await f.text()); const ids = new Set(history.map(r => r.id));
+    (d.history || []).forEach(r => { if (r && r.id && !ids.has(r.id)) history.push(r) });
+    history.sort((a, b) => a.date.localeCompare(b.date)); store.set('history', history); renderProgress();
+  } catch { $('#histTable').insertAdjacentHTML('afterbegin', '<p class="notice"><b>Backup non valido.</b> Scegli un file esportato da Vocalis.</p>') }
+};
+
+// ---------- guida ----------
+$('#guide').innerHTML = [
+  ['Pitch (F0)', 'La frequenza fondamentale: quante volte al secondo vibrano le corde vocali. Vocalis la stima con l\'algoritmo YIN e la converte in nota (solfeggio italiano, La3 = 220 Hz).', 'voce maschile parlata ~ 100–150 Hz · femminile ~ 180–250 Hz'],
+  ['Jitter', 'Variazione della durata da un ciclo vibratorio al successivo. Alto quando le corde vibrano in modo irregolare: contribuisce alla voce rauca. Misurato solo su note tenute.', 'normale < 1,04 % (soglia MDVP/Praat)'],
+  ['Shimmer', 'Variazione dell\'ampiezza tra cicli consecutivi. Cresce con raucedine, chiusura incompleta e affaticamento. Risente anche del rumore della stanza.', 'normale < 3,81 %'],
+  ['HNR', 'Rapporto armoniche/rumore: quanta parte del suono è periodica rispetto al rumore (aria, attrito). Basso nella voce soffiata e in quella rauca.', 'voce sana in vocale sostenuta ≥ 20 dB'],
+  ['CPP', 'Prominenza del picco cepstrale: quanto è netta la periodicità nello spettro. È l\'indice più robusto per la disfonia e funziona anche nel parlato. La scala dipende dall\'algoritmo: confronta i tuoi valori nel tempo.', 'Vocalis: ≥ 27 buono · < 21 basso'],
+  ['H1–H2', 'Differenza tra la prima e la seconda armonica. Valori alti indicano emissione soffiata (molta aria, chiusura debole); valori molto bassi con volume alto indicano emissione pressata o tesa. Varia con la vocale.', 'circa −4 … +6 dB in emissione modale'],
+  ['Stabilità del tono', 'Deviazione standard del pitch in cent durante una nota tenuta, al netto della deriva lenta. 100 cent = 1 semitono.', '≤ 20 cent stabile · > 50 instabile'],
+  ['Tempo massimo di fonazione', 'Quanto riesci a tenere la vocale con un unico respiro. Misura la coordinazione tra fiato e chiusura glottica.', 'adulti ≥ 15–20 s; sotto 10 s merita attenzione'],
+  ['Punteggio qualità vocale', 'Media pesata di CPP (30 %), HNR (20 %), stabilità (20 %), jitter e shimmer (15 % ciascuno). Nei glissati e nelle sirene sostituisce stabilità, jitter e shimmer con fluidità ed estensione.', '75–100 buona · 50–74 discreta · < 50 da migliorare']
+].map(([t, d, r]) => `<div class="panel"><h3>${t}</h3><p>${d}</p><div class="ref">${r}</div></div>`).join('');
+
+// ---------- navigazione ----------
+function showView(name) {
+  ['esercizi', 'sessione', 'progressi', 'guida'].forEach(v => $('#v-' + v).hidden = v !== name);
+  const tab = name === 'sessione' ? (session.key === 'free' ? 'libero' : 'esercizi') : name;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  if (name === 'progressi') renderProgress();
+}
+document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
+  const t = b.dataset.tab;
+  if (t === 'libero') { stopRec(); session.done = false; session.review = null; openSession('free'); return }
+  if (session.state === 'rec') stopRec();
+  session.state = 'idle'; session.key = null;
+  showView(t); if (t === 'esercizi') renderGrid();
+});
+window.addEventListener('resize', () => { if (!$('#v-progressi').hidden) renderProgress() });
+
+if (!window.isSecureContext || !navigator.mediaDevices) micProblem('unsupported');
+renderSettings(); renderGrid();
+})();
+</script>
+
+</body>
+</html>
